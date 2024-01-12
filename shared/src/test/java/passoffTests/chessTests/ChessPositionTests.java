@@ -34,6 +34,18 @@ public class ChessPositionTests {
                 "hashCode returned the same value for different positions");
     }
 
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        ChessPositionTests that=(ChessPositionTests) object;
+        return java.util.Objects.equals(original, that.original) && java.util.Objects.equals(equal, that.equal) && java.util.Objects.equals(different, that.different);
+    }
+
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), original, equal, different);
+    }
+
     @Test
     @DisplayName("Combined Testing")
     public void hashSetTest() {
