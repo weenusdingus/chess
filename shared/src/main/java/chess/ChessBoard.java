@@ -25,7 +25,7 @@ public class ChessBoard {
     private ChessPiece [][] squares = new ChessPiece[8][8];
 
     public ChessBoard() {
-        resetBoard();
+//        resetBoard();
     }
 
     /**
