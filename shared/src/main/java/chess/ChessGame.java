@@ -76,15 +76,12 @@ public class ChessGame {
         return null;
     }
 
-    /**
-     * Makes a move in a chess game
-     *
-     * @param move chess move to preform
-     * @throws InvalidMoveException if move is invalid
-     */
-    public void makeMove(ChessMove move) throws InvalidMoveException {
-
-        throw new InvalidMoveException("Invalid move");
+    @Override
+    public String toString() {
+        return "ChessGame{" +
+                "b=" + board +
+                ", ct=" + currentTurn +
+                '}';
     }
 
     @Override
@@ -98,6 +95,37 @@ public class ChessGame {
     @Override
     public int hashCode() {
         return Objects.hash(board, currentTurn);
+    }
+
+    /**
+     * Makes a move in a chess game
+     *
+     * @param move chess move to preform
+     * @throws InvalidMoveException if move is invalid
+     */
+    public void makeMove(ChessMove move) throws InvalidMoveException {
+        ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+        if (piece.getTeamColor() == getTeamTurn()) {
+            if (piece.pieceMoves(board, move.getStartPosition()).contains(move)) {
+                if (move.getPromotionPiece() == null) {
+                    board.addPiece(move.getEndPosition(), piece);
+                } else {
+                    board.addPiece(move.getEndPosition(), new ChessPiece(piece.getTeamColor(), move.getPromotionPiece()));
+                }
+                board.addPiece(move.getStartPosition(), null);
+                if (isInCheck(piece.getTeamColor()) || isInCheckmate(piece.getTeamColor()) || isInStalemate(piece.getTeamColor())) {
+                    board.addPiece(move.getStartPosition(), piece);
+                    board.addPiece(move.getEndPosition(), capturedPiece);
+                    throw new InvalidMoveException("Invalid move");
+                }
+            }
+            setTeamTurn(getTeamTurn());
+        }
+        else {
+            throw new InvalidMoveException("Invalid move");
+        }
+
     }
 
     /**
