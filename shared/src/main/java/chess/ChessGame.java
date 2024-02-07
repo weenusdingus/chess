@@ -106,19 +106,21 @@ public class ChessGame {
     public void makeMove(ChessMove move) throws InvalidMoveException {
         ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
         ChessPiece piece = board.getPiece(move.getStartPosition());
-        if (piece.getTeamColor() == getTeamTurn()) {
-            if (piece.pieceMoves(board, move.getStartPosition()).contains(move)) {
-                if (move.getPromotionPiece() == null) {
-                    board.addPiece(move.getEndPosition(), piece);
-                } else {
-                    board.addPiece(move.getEndPosition(), new ChessPiece(piece.getTeamColor(), move.getPromotionPiece()));
-                }
-                board.addPiece(move.getStartPosition(), null);
-                if (isInCheck(piece.getTeamColor()) || isInCheckmate(piece.getTeamColor()) || isInStalemate(piece.getTeamColor())) {
-                    board.addPiece(move.getStartPosition(), piece);
-                    board.addPiece(move.getEndPosition(), capturedPiece);
-                    throw new InvalidMoveException("Invalid move");
-                }
+        if (piece.getTeamColor() == getTeamTurn()){
+            throw new InvalidMoveException("Invalid move");
+        }
+        if (piece.pieceMoves(board, move.getStartPosition()).contains(move)){
+            if (move.getPromotionPiece() == null){
+                board.addPiece(move.getEndPosition(), piece);
+            }
+            else {
+                board.addPiece(move.getEndPosition(), new ChessPiece(piece.getTeamColor(), move.getPromotionPiece()));
+            }
+            board.addPiece(move.getStartPosition(), null);
+            if (isInCheck(piece.getTeamColor()) || isInCheckmate(piece.getTeamColor()) || isInStalemate(piece.getTeamColor())){
+                board.addPiece(move.getStartPosition(), piece);
+                board.addPiece(move.getEndPosition(), capturedPiece);
+                throw new InvalidMoveException("Invalid move");
             }
             setTeamTurn(getTeamTurn());
         }
