@@ -59,19 +59,19 @@ public class ChessGame {
         if (board.getPiece(startPosition) != null) {
             ChessPiece startPiece = board.getPiece(startPosition);
             Collection<ChessMove> allMoves = startPiece.pieceMoves(board, startPosition);
-            Collection<ChessMove> movesList = new ArrayList<>();
+            Collection<ChessMove> moveList = new ArrayList<>();
             for (ChessMove move: allMoves) {
                 ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
                 // if moving here does not put the team in check, then add to valid moves
                 board.addPiece(move.getEndPosition(), startPiece);
                 board.addPiece(move.getStartPosition(), null);
                 if (!isInCheck(startPiece.getTeamColor())) {
-                    movesList.add(move);
+                    moveList.add(move);
                 }
                 board.addPiece(move.getStartPosition(), startPiece);
                 board.addPiece(move.getEndPosition(), capturedPiece);
             }
-            return movesList;
+            return moveList;
         }
         return null;
     }
