@@ -53,5 +53,16 @@ public class ServiceTest {
     });
 
   }
+  @Test
+  void testLogin() throws DataAccessException, UsernameException{
+    dao.createUser(user);
+    UserData badUser = new UserData("badUsername", "password", "email@email.com");
+    auth = service.login(user);
+    assertNotNull(auth);
+    assertEquals(user.username(), auth.username());
+    assertThrows(UsernameException.class, () -> {
+      service.login(badUser);
+    });
+  }
 }
 
