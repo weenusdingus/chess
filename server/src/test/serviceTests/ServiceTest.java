@@ -1,0 +1,49 @@
+package serviceTests;
+import chess.ChessGame;
+import dataAccess.DataAccess;
+import dataAccess.DataAccessException;
+import dataAccess.MemoryDataAccess;
+import model.AuthData;
+import model.GameData;
+import model.UserData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import service.ClearService;
+import service.UserService;
+import service.serviceExceptions.UsernameException;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ServiceTest {
+  static final UserService service = new UserService(new MemoryDataAccess());
+  static final ClearService clearService = new ClearService(new MemoryDataAccess());
+  ChessGame chessGame = new ChessGame();
+  UserData user = new UserData("username", "password", "email@email.com");
+  AuthData auth = new AuthData(UUID.randomUUID().toString(), "username");
+  GameData game = new GameData(12345, "wusername", "busername", "chess", chessGame);
+
+  MemoryDataAccess dao = new MemoryDataAccess();
+
+
+  @Test
+  void testClear() throws DataAccessException, UsernameException {
+    dao.createUser(user);
+    dao.createAuth(auth);
+    dao.createGame(game);
+    clearService.clear();
+
+    assertEquals(0, dao.getUsers().size());
+    assertEquals(0, dao.getAuths().size());
+    assertEquals(0, dao.getGames().size());
+  }
+  @Test
+  void testRegister(AuthData authdata) throws DataAccessException, UsernameException{
+    authdata = service.register(user);
+    assertNotNull(authdata);
+    assertEquals(user.username());
+
+  }
+}
+
