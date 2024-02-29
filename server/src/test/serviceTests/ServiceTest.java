@@ -26,6 +26,11 @@ public class ServiceTest {
 
   MemoryDataAccess dao = new MemoryDataAccess();
 
+  @BeforeEach
+  void setup() throws DataAccessException{
+    clearService.clear();
+  }
+
 
   @Test
   void testClear() throws DataAccessException, UsernameException {
@@ -39,10 +44,13 @@ public class ServiceTest {
     assertEquals(0, dao.getGames().size());
   }
   @Test
-  void testRegister(AuthData authdata) throws DataAccessException, UsernameException{
-    authdata = service.register(user);
-    assertNotNull(authdata);
-    assertEquals(user.username());
+  void testRegister() throws DataAccessException, UsernameException{
+    auth = service.register(user);
+    assertNotNull(auth);
+    assertEquals(user.username(), auth.username());
+    assertThrows(UsernameException.class, () -> {
+      service.register(user);
+    });
 
   }
 }
