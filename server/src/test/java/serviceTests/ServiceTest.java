@@ -14,8 +14,6 @@ import service.serviceExceptions.AlreadyTakenException;
 import service.serviceExceptions.BadRequestException;
 import service.serviceExceptions.UnauthorizedException;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,19 +126,15 @@ public class ServiceTest {
   @Test
   void testJoinGame() throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
     dao.createAuth(auth);
-    GameData goodGame = new GameData(1, null,null,"chess", null);
+    GameData goodGame = new GameData(1, null,null, "chess", null);
     goodGame = dao.createGame(goodGame);
-    gameService.joinGame(auth.authToken(), "WHITE", goodGame.gameId());
-    assertEquals("username", dao.getGame(goodGame.gameId()).whiteUsername());
+    gameService.joinGame(auth.authToken(), "WHITE", goodGame.gameID());
+    assertEquals("username", dao.getGame(goodGame.gameID()).whiteUsername());
   }
   @Test
   void testJoinGameFail() throws DataAccessException {
-    dao.createAuth(auth);
-    GameData badGame = new GameData(1, "wusername",null,"chess", null);
-    badGame = dao.createGame(badGame);
-    GameData finalBadGame=badGame;
-    assertThrows(AlreadyTakenException.class, () -> {
-      gameService.joinGame(auth.authToken(), "WHITE", finalBadGame.gameId());
+    assertThrows(UnauthorizedException.class, () -> {
+      gameService.joinGame(auth.authToken(), "WHITE", 1);
     });
   }
 }

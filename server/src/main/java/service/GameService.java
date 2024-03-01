@@ -41,6 +41,9 @@ public class GameService {
     if(dataAccess.getGame(gameID) == null){
       throw new BadRequestException("Game does not exist");
     }
+    if(color == null){
+      return;
+    }
     if(color.equals("WHITE")){
       if(dataAccess.getGame(gameID).whiteUsername() != null){
         throw new AlreadyTakenException("Already taken");

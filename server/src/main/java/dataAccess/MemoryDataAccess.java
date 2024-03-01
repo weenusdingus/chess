@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class MemoryDataAccess implements DataAccess {
 
-  private int nextGameId = 1;
+  private int nextGameId = 0;
 
   final static private Collection<UserData> users = new ArrayList<>();
   final static private HashMap<Integer, GameData> games = new HashMap<>();

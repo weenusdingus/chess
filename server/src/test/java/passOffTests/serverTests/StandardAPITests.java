@@ -1,4 +1,4 @@
-package java.passOffTests.serverTests;
+package passOffTests.serverTests;
 
 import chess.ChessGame;
 import dataAccess.DataAccessException;
