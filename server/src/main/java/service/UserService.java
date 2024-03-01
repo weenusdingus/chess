@@ -5,7 +5,9 @@ import dataAccess.DataAccess;
 import dataAccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
-import service.serviceExceptions.UsernameException;
+import service.serviceExceptions.AlreadyTakenException;
+import service.serviceExceptions.BadRequestException;
+import service.serviceExceptions.UnauthorizedException;
 
 import java.util.UUID;
 
@@ -16,24 +18,34 @@ public class UserService {
     this.dataAccess = dataAccess;
   }
 
-  public AuthData register(UserData user) throws UsernameException, DataAccessException {
-    if (dataAccess.getUser(user.username()) == null){
+  public AuthData register(UserData user) throws AlreadyTakenException, DataAccessException, BadRequestException {
+    if (user.username() == null || user.password() == null || user.email() == null){
+      throw new BadRequestException("Bad request");
+    }
+    else if (dataAccess.getUser(user.username()) == null){
       dataAccess.createUser(user);
       return dataAccess.createAuth(new AuthData(UUID.randomUUID().toString(),user.username()));
     }
     else {
-      throw new UsernameException("Username is Taken");
+      throw new AlreadyTakenException("Username is Taken");
     }
   }
 
-  public AuthData login(UserData user) throws DataAccessException, UsernameException {
+  public AuthData login(UserData user) throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     if(dataAccess.getUser(user.username()) != null){
       return dataAccess.createAuth(new AuthData(UUID.randomUUID().toString(),user.username()));
     }
     else {
-      throw new UsernameException("Username does not exist");
+      throw new UnauthorizedException("Unauthorized");
     }
   }
 
-  public void logout(UserData user) throws DataAccessException {}
+  public void logout(String auth) throws DataAccessException, UnauthorizedException {
+    if(dataAccess.getAuth(auth) != null){
+      dataAccess.deleteAuth(auth);
+    }
+    else {
+      throw new UnauthorizedException("Unauthorized");
+    }
+  }
 }

@@ -2,6 +2,7 @@
 package dataAccess;
 import java.util.*;
 
+import chess.ChessGame;
 import model.UserData;
 import model.GameData;
 import model.AuthData;
@@ -48,6 +49,7 @@ public class MemoryDataAccess implements DataAccess {
 
   @Override
   public GameData createGame(GameData game) throws DataAccessException {
+    GameData newgame = new GameData(nextGameId, null, null,game.gameName(), new ChessGame());
     games.put(nextGameId++, game);
     return game;
   }
