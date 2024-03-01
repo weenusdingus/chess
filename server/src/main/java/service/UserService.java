@@ -32,8 +32,10 @@ public class UserService {
   }
 
   public AuthData login(UserData user) throws DataAccessException, AlreadyTakenException, UnauthorizedException {
-    if(dataAccess.getUser(user.username()) != null){
-      return dataAccess.createAuth(new AuthData(UUID.randomUUID().toString(),user.username()));
+    UserData correctUser = dataAccess.getUser(user.username());
+    if ((correctUser != null) && (user.password().equals(correctUser.password()))) {
+      String auth = UUID.randomUUID().toString();
+      return dataAccess.createAuth(new AuthData(auth, user.username()));
     }
     else {
       throw new UnauthorizedException("Unauthorized");

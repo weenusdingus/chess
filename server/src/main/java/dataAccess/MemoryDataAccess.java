@@ -13,9 +13,9 @@ public class MemoryDataAccess implements DataAccess {
 
   private int nextGameId = 0;
 
-  final static private Collection<UserData> users = new ArrayList<>();
-  final static private HashMap<Integer, GameData> games = new HashMap<>();
-  final static private Collection<AuthData> auths = new ArrayList<>();
+  private Collection<UserData> users = new ArrayList<>();
+  private HashMap<Integer, GameData> games = new HashMap<>();
+  private Collection<AuthData> auths = new ArrayList<>();
 
   @Override
   public void clear() throws DataAccessException {
@@ -50,8 +50,8 @@ public class MemoryDataAccess implements DataAccess {
   @Override
   public GameData createGame(GameData game) throws DataAccessException {
     GameData newgame = new GameData(nextGameId, null, null,game.gameName(), new ChessGame());
-    games.put(nextGameId++, game);
-    return game;
+    games.put(nextGameId++, newgame);
+    return newgame;
   }
 
   @Override
