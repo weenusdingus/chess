@@ -223,25 +223,9 @@ public class ChessPiece {
                 }
             }
             //CaptureTopRight
-            if(myrow < 7 && mycol < 8){
-                ChessPosition checkPosition=new ChessPosition(myrow+1, mycol+1);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                }
-            }
+            addPawnCaptureMoveWhite(validMoves, myPosition, board, 1, 1);
             //CaptureTopLeft
-            if(myrow < 7 && mycol > 1){
-                ChessPosition checkPosition=new ChessPosition(myrow+1, mycol-1);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                }
-            }
+            addPawnCaptureMoveWhite(validMoves, myPosition, board, 1, -1);
             //Promotion
             if(myrow == 7){
                 ChessPosition checkPosition=new ChessPosition(myrow+1, mycol);
@@ -419,6 +403,20 @@ public class ChessPiece {
 
             ChessMove validMove = new ChessMove(myPosition, checkPosition, null);
             validMoves.add(validMove);
+        }
+    }
+    private void addPawnCaptureMoveWhite(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+
+        if (myRow < 7 && myCol >= 0 && myCol < 8) {
+            ChessPosition checkPosition = new ChessPosition(myRow + rowIncrement, myCol + colIncrement);
+            if (board.getPiece(checkPosition) != null) {
+                if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+                    ChessMove captureMove = new ChessMove(myPosition, checkPosition, null);
+                    validMoves.add(captureMove);
+                }
+            }
         }
     }
 
