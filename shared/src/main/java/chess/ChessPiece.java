@@ -278,22 +278,12 @@ public class ChessPiece {
             //CaptureBottomRight
             if(myrow > 2 && mycol < 8){
                 ChessPosition checkPosition=new ChessPosition(myrow-1, mycol+1);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                }
+                addCaptureMoveBlack(validMoves, myPosition, checkPosition, board);
             }
             //CaptureBottomLeft
             if(myrow > 2 && mycol > 1){
                 ChessPosition checkPosition=new ChessPosition(myrow-1, mycol-1);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                }
+                addCaptureMoveBlack(validMoves, myPosition, checkPosition, board);
             }
             //Promotion
             if(myrow == 2){
@@ -322,27 +312,13 @@ public class ChessPiece {
 
         return validMoves;}
     private void addDiagonalMoves(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
-        int myRow = myPosition.getRow();
-        int myCol = myPosition.getColumn();
-
-        while (myRow >= 0 && myRow < 8 && myCol >= 0 && myCol < 8) {
-            myRow += rowIncrement;
-            myCol += colIncrement;
-            ChessPosition checkPosition = new ChessPosition(myRow, myCol);
-
-            if (board.getPiece(checkPosition) != null) {
-                if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                    ChessMove captureMove = new ChessMove(myPosition, checkPosition, null);
-                    validMoves.add(captureMove);
-                }
-                break;
-            }
-
-            ChessMove validMove = new ChessMove(myPosition, checkPosition, null);
-            validMoves.add(validMove);
-        }
+        helper2(validMoves, myPosition, board, rowIncrement, colIncrement);
     }
     private void addStraightMoves(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
+        helper2(validMoves, myPosition, board, rowIncrement, colIncrement);
+    }
+
+    private void helper2(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
 
@@ -363,6 +339,7 @@ public class ChessPiece {
             validMoves.add(validMove);
         }
     }
+
     private void addPawnCaptureMoveWhite(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
@@ -395,6 +372,13 @@ public class ChessPiece {
             validMoves.add(new ChessMove(source, target, PieceType.ROOK));
             validMoves.add(new ChessMove(source, target, PieceType.BISHOP));
             validMoves.add(new ChessMove(source, target, PieceType.KNIGHT));
+    }
+    private void addCaptureMoveBlack(Collection<ChessMove> validMoves, ChessPosition source, ChessPosition target, ChessBoard board) {
+        ChessPiece targetPiece = board.getPiece(target);
+
+        if (targetPiece != null && targetPiece.getTeamColor() != board.getPiece(source).getTeamColor()) {
+            validMoves.add(new ChessMove(source, target, null));
+        }
     }
 
 }
