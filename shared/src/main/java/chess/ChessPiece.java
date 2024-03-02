@@ -84,20 +84,15 @@ public class ChessPiece {
 
         //BISHOP
 
-
         if (this.getPieceType() == PieceType.BISHOP||this.getPieceType() == PieceType.QUEEN) {
             //TopRight
             addDiagonalMoves(validMoves, myPosition, board, 1, 1);
-
             //TopLeft
             addDiagonalMoves(validMoves, myPosition, board, 1, -1);
-
             //BottomRight
             addDiagonalMoves(validMoves, myPosition, board, -1, 1);
-
             //BottomLeft
             addDiagonalMoves(validMoves, myPosition, board, -1, -1);
-
         }
 
         //KING
@@ -196,66 +191,13 @@ public class ChessPiece {
 
         if (this.getPieceType() == PieceType.ROOK||this.getPieceType() == PieceType.QUEEN){
             //Up
-            while (myrow < 8){
-                myrow += 1;
-                ChessPosition checkPosition=new ChessPosition(myrow, mycol);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                    break;
-                }
-                ChessMove validMove=new ChessMove(myPosition, checkPosition,  null);
-                validMoves.add(validMove);
-            }
-
-            myrow = myPosition.getRow();
-
+            addStraightMoves(validMoves, myPosition, board, 1, 0);
             //Down
-            while (myrow > 1){
-                myrow -= 1;
-                ChessPosition checkPosition=new ChessPosition(myrow, mycol);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                    break;
-                }
-                ChessMove validMove=new ChessMove(myPosition, checkPosition,  null);
-                validMoves.add(validMove);
-            }
-            myrow = myPosition.getRow();
+            addStraightMoves(validMoves, myPosition, board, -1, 0);
             //Left
-            while (mycol > 1){
-                mycol -= 1;
-                ChessPosition checkPosition=new ChessPosition(myrow, mycol);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                    break;
-                }
-                ChessMove validMove=new ChessMove(myPosition, checkPosition,  null);
-                validMoves.add(validMove);
-            }
-            mycol = myPosition.getColumn();
+            addStraightMoves(validMoves, myPosition, board, 0, -1);
             //Right
-            while (mycol < 8){
-                mycol += 1;
-                ChessPosition checkPosition=new ChessPosition(myrow, mycol);
-                if (board.getPiece(checkPosition) != null) {
-                    if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                        ChessMove captureMove=new ChessMove(myPosition, checkPosition, null);
-                        validMoves.add(captureMove);
-                    }
-                    break;
-                }
-                ChessMove validMove=new ChessMove(myPosition, checkPosition,  null);
-                validMoves.add(validMove);
-            }
+            addStraightMoves(validMoves, myPosition, board, 0, 1);
         }
         //WhitePawn
         if (this.getPieceType() == PieceType.PAWN && this.getTeamColor() == ChessGame.TeamColor.WHITE){
@@ -438,6 +380,27 @@ public class ChessPiece {
 
         return validMoves;}
     private void addDiagonalMoves(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+
+        while (myRow >= 0 && myRow < 8 && myCol >= 0 && myCol < 8) {
+            myRow += rowIncrement;
+            myCol += colIncrement;
+            ChessPosition checkPosition = new ChessPosition(myRow, myCol);
+
+            if (board.getPiece(checkPosition) != null) {
+                if (board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+                    ChessMove captureMove = new ChessMove(myPosition, checkPosition, null);
+                    validMoves.add(captureMove);
+                }
+                break;
+            }
+
+            ChessMove validMove = new ChessMove(myPosition, checkPosition, null);
+            validMoves.add(validMove);
+        }
+    }
+    private void addStraightMoves(Collection<ChessMove> validMoves, ChessPosition myPosition, ChessBoard board, int rowIncrement, int colIncrement) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
 
