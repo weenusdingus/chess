@@ -28,7 +28,7 @@ public class Server {
         clearService = new ClearService(dataAccess);
     }
 
-    public int run(int desiredPort) throws DataAccessException {
+    public int run(int desiredPort){
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
