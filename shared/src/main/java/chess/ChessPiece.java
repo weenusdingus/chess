@@ -273,7 +273,7 @@ public class ChessPiece {
                 ChessPosition checkPosition=new ChessPosition(myrow-1, mycol-1);
                 baseHelper(validMoves, myPosition, checkPosition, board);
             }
-            //Promotionn
+            //Promotionnn
             if(myrow == 2){
                 ChessPosition checkPosition=new ChessPosition(myrow-1, mycol);
                 if (board.getPiece(checkPosition) == null) {
