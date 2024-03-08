@@ -29,8 +29,8 @@ public class MySqlDataAccess implements DataAccess {
           """
             CREATE TABLE IF NOT EXISTS Game (
               `gameID` int NOT NULL,
-              `whiteUsername` varchar(255) NOT NULL,
-              `blackUsername` varchar(255) NOT NULL,
+              `whiteUsername` varchar(255),
+              `blackUsername` varchar(255),
               `gameName` varchar(255) NOT NULL,
               `gameJSON` varchar(2048) NOT NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -179,11 +179,16 @@ public class MySqlDataAccess implements DataAccess {
   public void updateGame(int gameID, GameData game) throws DataAccessException {
     var newGameJSON = new Gson().toJson(game.game());
     try (var conn = DatabaseManager.getConnection()) {
-      var statement = "UPDATE Game SET gameJSON = ? WHERE id = ?";
+      var statement = "UPDATE Game SET gameJSON = ?, whiteUsername = ?, blackUsername = ?, gameName = ?  WHERE gameID = ?";
       try (var ps = conn.prepareStatement(statement)) {
         ps.setString(1, newGameJSON);
-        ps.setInt(2, gameID);
+        ps.setString(2, game.whiteUsername());
+        ps.setString(3, game.blackUsername());
+        ps.setString(4, game.gameName());
+        ps.setInt(5, gameID);
+        ps.executeUpdate();
       }
+
     } catch (SQLException e) {
       throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
     }
