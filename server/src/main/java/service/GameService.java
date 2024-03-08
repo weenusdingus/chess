@@ -18,7 +18,7 @@ public class GameService {
   }
 
   public GameData createGame(GameData game, String authToken) throws DataAccessException, BadRequestException, UnauthorizedException {
-    if(game.gameName() == null){
+    if(game.gameName() == null) {
       throw new BadRequestException("Needs a game name");
     }
     else if(dataAccess.getAuth(authToken) != null) {

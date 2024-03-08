@@ -5,6 +5,7 @@ import dataAccess.DataAccess;
 import dataAccess.DataAccessException;
 import model.UserData;
 import model.AuthData;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import service.serviceExceptions.AlreadyTakenException;
 import service.serviceExceptions.BadRequestException;
 import service.serviceExceptions.UnauthorizedException;
@@ -33,7 +34,9 @@ public class UserService {
 
   public AuthData login(UserData user) throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     UserData correctUser = dataAccess.getUser(user.username());
-    if ((correctUser != null) && (user.password().equals(correctUser.password()))) {
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    String hashedPassword =  encoder.encode(user.password());
+    if ((correctUser != null) && (hashedPassword.equals(correctUser.password()))) {
       String auth = UUID.randomUUID().toString();
       return dataAccess.createAuth(new AuthData(auth, user.username()));
     }
