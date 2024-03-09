@@ -35,7 +35,8 @@ public class UserService {
 
   public AuthData login(UserData user) throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     UserData correctUser = dataAccess.getUser(user.username());
-    if ((correctUser != null) && BCrypt.checkpw(user.password(), correctUser.password())) {
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    if ((correctUser != null) && encoder.matches(user.password(), correctUser.password())) {
       String auth = UUID.randomUUID().toString();
       return dataAccess.createAuth(new AuthData(auth, user.username()));
     }

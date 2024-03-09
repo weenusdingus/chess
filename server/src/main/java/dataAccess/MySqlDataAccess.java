@@ -28,11 +28,12 @@ public class MySqlDataAccess implements DataAccess {
             """,
           """
             CREATE TABLE IF NOT EXISTS Game (
-              `gameID` int NOT NULL,
+              `gameID` int NOT NULL AUTO_INCREMENT,
               `whiteUsername` varchar(255),
               `blackUsername` varchar(255),
               `gameName` varchar(255) NOT NULL,
-              `gameJSON` varchar(2048) NOT NULL
+              `gameJSON` varchar(2048) NOT NULL,
+              PRIMARY KEY (gameID)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
             """,
           """
@@ -92,7 +93,7 @@ public class MySqlDataAccess implements DataAccess {
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     String hashedPassword =  encoder.encode(user.password());
     myExecute(statement, user.username(), hashedPassword, user.email());
-    return new UserData(user.username(), user.password(), user.email());
+    return null;
   }
 
   public UserData getUser(String username) throws DataAccessException {
@@ -123,8 +124,9 @@ public class MySqlDataAccess implements DataAccess {
   public GameData createGame(GameData game) throws DataAccessException {
     var gameJSON = new Gson().toJson(game.game());
     var statement = "INSERT INTO Game (gameID, whiteUsername, blackUsername, gameName, gameJSON) VALUES (?, ?, ?, ?, ?)";
-    myExecute(statement, game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), gameJSON);
-    return game;
+    int gameId = myExecute(statement, game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), gameJSON);
+    GameData newGame = new GameData(gameId, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+    return newGame;
   }
 
   @Override

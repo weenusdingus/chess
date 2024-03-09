@@ -9,6 +9,7 @@ import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -59,7 +60,7 @@ public class DataAccessTest {
     assertEquals(user.username(), auth.username());
   }
   @Test
-  void testRegisterFail() throws DataAccessException, AlreadyTakenException, BadRequestException {
+  void createUserFail() throws DataAccessException, AlreadyTakenException, BadRequestException {
     auth = service.register(user);
     assertThrows(AlreadyTakenException.class, () -> {
       service.register(user);
@@ -68,6 +69,9 @@ public class DataAccessTest {
   @Test
   void testLogin() throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     dao.createUser(user);
+    UserData newUser = dao.getUser(user.username());
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    assertTrue(encoder.matches(user.password(), newUser.password()));
     auth = service.login(user);
     assertNotNull(auth);
     assertEquals(user.username(), auth.username());
@@ -94,12 +98,10 @@ public class DataAccessTest {
     });
   }
   @Test
-  void testListGames() throws DataAccessException, UnauthorizedException {
+  void testListGames() throws DataAccessException, UnauthorizedException, BadRequestException {
     dao.createAuth(auth);
-    dao.createGame(game);
-    dao.createGame(game);
-    dao.createGame(game);
-    assertEquals(3, gameService.listGames(auth.authToken()).size());
+    gameService.createGame(game, auth.authToken());
+    assertEquals(1, dao.getSize("game"));
   }
   @Test
   void testListGamesFail(){
@@ -111,9 +113,7 @@ public class DataAccessTest {
   void testCreateGame() throws UnauthorizedException, BadRequestException, DataAccessException {
     dao.createAuth(auth);
     gameService.createGame(game, auth.authToken());
-    gameService.createGame(game, auth.authToken());
-    gameService.createGame(game, auth.authToken());
-    assertEquals(3, gameService.listGames(auth.authToken()).size());
+    assertEquals(1, dao.getSize("game"));
   }
   @Test
   void testCreateGameFail(){

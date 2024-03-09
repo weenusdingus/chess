@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import dataAccess.DataAccess;
 import dataAccess.DataAccessException;
 import dataAccess.MemoryDataAccess;
+import dataAccess.MySqlDataAccess;
 import model.*;
 import service.ClearService;
 import service.GameService;
@@ -13,16 +14,23 @@ import service.serviceExceptions.BadRequestException;
 import service.serviceExceptions.UnauthorizedException;
 import spark.*;
 
+import java.sql.SQLException;
 import java.util.Collection;
 
 public class Server {
     private final UserService userService;
     private final GameService gameService;
     private final ClearService clearService;
-    private final DataAccess dataAccess;
+    private DataAccess dataAccess;
 
     public Server() {
-        dataAccess = new MemoryDataAccess();
+        try {
+            dataAccess=new MySqlDataAccess();
+        }
+        catch(DataAccessException e){
+            System.out.println(e.getMessage());
+            dataAccess=new MemoryDataAccess();
+        }
         userService = new UserService(dataAccess);
         gameService = new GameService(dataAccess);
         clearService = new ClearService(dataAccess);
