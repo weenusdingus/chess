@@ -54,69 +54,56 @@ public class DataAccessTest {
     assertEquals(0, dao.getSize("Game"));
   }
   @Test
-  void testRegister() throws DataAccessException, AlreadyTakenException, BadRequestException {
-    auth = service.register(user);
-    assertNotNull(auth);
-    assertEquals(user.username(), auth.username());
+  void createUser() throws DataAccessException, AlreadyTakenException, BadRequestException {
+    dao.createUser(user);
+    UserData testUser = dao.getUser("username");
+    assertEquals(testUser.username(), user.username());
   }
   @Test
   void createUserFail() throws DataAccessException, AlreadyTakenException, BadRequestException {
-    auth = service.register(user);
-    assertThrows(AlreadyTakenException.class, () -> {
-      service.register(user);
+    UserData badUser = new UserData("bad", null, null);
+    assertThrows(IllegalArgumentException.class, () ->{
+      dao.createUser(badUser);
     });
   }
   @Test
-  void testLogin() throws DataAccessException, AlreadyTakenException, UnauthorizedException {
+  void getUser() throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     dao.createUser(user);
-    UserData newUser = dao.getUser(user.username());
-    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-    assertTrue(encoder.matches(user.password(), newUser.password()));
-    auth = service.login(user);
-    assertNotNull(auth);
-    assertEquals(user.username(), auth.username());
+    UserData testUser = dao.getUser("username");
+    assertEquals(testUser.username(), user.username());
   }
   @Test
-  void testLoginFail() throws DataAccessException, AlreadyTakenException {
-    dao.createUser(user);
-    UserData badUser = new UserData("badUsername", "password", "email@email.com");
-    assertThrows(UnauthorizedException.class, () -> {
-      service.login(badUser);
-    });
+  void getUserFail() throws DataAccessException, AlreadyTakenException {
+    assertNull(dao.getUser("nonesistantuser")) ;
   }
   @Test
-  void testLogout() throws DataAccessException, UnauthorizedException, AlreadyTakenException {
-    dao.createUser(user);
-    auth = service.login(user);
-    service.logout(auth.authToken());
-    assertNull(dao.getAuth(auth.authToken()));
+  void getGame() throws DataAccessException, UnauthorizedException, AlreadyTakenException {
+    dao.createGame(game);
+    GameData testGame = dao.getGame(1);
+    assertEquals(testGame.gameID(), game.gameID());
+
   }
   @Test
-  void testLogoutFail() throws UnauthorizedException{
-    assertThrows(UnauthorizedException.class, () -> {
-      service.logout(auth.authToken());
-    });
+  void getGameFail() throws UnauthorizedException, DataAccessException {
+    assertNull(dao.getGame(1));
   }
   @Test
-  void testListGames() throws DataAccessException, UnauthorizedException, BadRequestException {
+  void listGames() throws DataAccessException, UnauthorizedException, BadRequestException {
+    dao.createGame(game);
+    assertEquals(1, dao.listGames().size());
+  }
+  @Test
+  void listGamesFail() throws DataAccessException {
+    assertEquals(0,dao.listGames().size());
+  }
+  @Test
+  void createGame() throws UnauthorizedException, BadRequestException, DataAccessException {
     dao.createAuth(auth);
     gameService.createGame(game, auth.authToken());
     assertEquals(1, dao.getSize("game"));
   }
   @Test
-  void testListGamesFail(){
-    assertThrows(UnauthorizedException.class, () -> {
-      gameService.listGames(auth.authToken());
-    });
-  }
-  @Test
-  void testCreateGame() throws UnauthorizedException, BadRequestException, DataAccessException {
-    dao.createAuth(auth);
-    gameService.createGame(game, auth.authToken());
-    assertEquals(1, dao.getSize("game"));
-  }
-  @Test
-  void testCreateGameFail(){
+  void createGameFail(){
     assertThrows(UnauthorizedException.class, () -> {
       gameService.createGame(game, auth.authToken());
     });

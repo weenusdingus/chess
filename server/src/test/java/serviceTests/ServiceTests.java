@@ -2,11 +2,13 @@ package serviceTests;
 import chess.ChessGame;
 import dataAccess.DataAccessException;
 import dataAccess.MemoryDataAccess;
+import dataAccess.MySqlDataAccess;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -27,11 +29,11 @@ public class ServiceTests {
   AuthData auth = new AuthData(UUID.randomUUID().toString(), "username");
   GameData game = new GameData(1, "wusername", "busername", "chess", chessGame);
 
-  MemoryDataAccess dao = null;
+  MySqlDataAccess dao = null;
 
   @BeforeEach
   void setup() throws DataAccessException{
-    dao = new MemoryDataAccess();
+    dao = new MySqlDataAccess();
     service = new UserService(dao);
     clearService = new ClearService(dao);
     gameService = new GameService(dao);
@@ -46,9 +48,9 @@ public class ServiceTests {
     dao.createGame(game);
     clearService.clear();
 
-    assertEquals(0, dao.getUsers().size());
-    assertEquals(0, dao.getAuths().size());
-    assertEquals(0, dao.getGames().size());
+    assertEquals(0, dao.getSize("Auth"));
+    assertEquals(0, dao.getSize("User"));
+    assertEquals(0, dao.getSize("Game"));
   }
   @Test
   void testRegister() throws DataAccessException, AlreadyTakenException, BadRequestException {
@@ -66,6 +68,9 @@ public class ServiceTests {
   @Test
   void testLogin() throws DataAccessException, AlreadyTakenException, UnauthorizedException {
     dao.createUser(user);
+    UserData newUser = dao.getUser(user.username());
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    assertTrue(encoder.matches(user.password(), newUser.password()));
     auth = service.login(user);
     assertNotNull(auth);
     assertEquals(user.username(), auth.username());
@@ -95,9 +100,7 @@ public class ServiceTests {
   void testListGames() throws DataAccessException, UnauthorizedException {
     dao.createAuth(auth);
     dao.createGame(game);
-    dao.createGame(game);
-    dao.createGame(game);
-    assertEquals(3, gameService.listGames(auth.authToken()).size());
+    assertEquals(1, gameService.listGames(auth.authToken()).size());
   }
   @Test
   void testListGamesFail(){
@@ -109,9 +112,7 @@ public class ServiceTests {
   void testCreateGame() throws UnauthorizedException, BadRequestException, DataAccessException {
     dao.createAuth(auth);
     gameService.createGame(game, auth.authToken());
-    gameService.createGame(game, auth.authToken());
-    gameService.createGame(game, auth.authToken());
-    assertEquals(3, gameService.listGames(auth.authToken()).size());
+    assertEquals(1, dao.getSize("game"));
   }
   @Test
   void testCreateGameFail(){
