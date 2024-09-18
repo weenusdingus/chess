@@ -202,6 +202,16 @@ public class ChessPiece {
             validMoves.addAll(getKnightKing(board, myPosition, -1, 2));
             validMoves.addAll(getKnightKing(board, myPosition, -1, -2));
         }
+        if (this.getPieceType() == PieceType.KING){
+            validMoves.addAll(getKnightKing(board, myPosition, 1, 1)); //TopRight
+            validMoves.addAll(getKnightKing(board, myPosition, 1, 0)); //Up
+            validMoves.addAll(getKnightKing(board, myPosition, 1, -1));//TopLeft
+            validMoves.addAll(getKnightKing(board, myPosition, 0, -1));//Left
+            validMoves.addAll(getKnightKing(board, myPosition, 0, 1)); //Right
+            validMoves.addAll(getKnightKing(board, myPosition, -1, -1));//BottomLeft
+            validMoves.addAll(getKnightKing(board, myPosition, -1, 0)); //Down
+            validMoves.addAll(getKnightKing(board, myPosition, -1, 1));//BottomRight
+        }
 
 
         return validMoves;
