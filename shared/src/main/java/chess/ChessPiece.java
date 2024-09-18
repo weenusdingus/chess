@@ -192,6 +192,16 @@ public class ChessPiece {
             validMoves.addAll(getBishopRookQueen(board, myPosition, -1, 0));  //Down
             validMoves.addAll(getBishopRookQueen(board, myPosition, 0, -1));  //Left
         }
+        if (this.getPieceType() == PieceType.KNIGHT){
+            validMoves.addAll(getKnightKing(board, myPosition, 2, 1));
+            validMoves.addAll(getKnightKing(board, myPosition, 2, -1));
+            validMoves.addAll(getKnightKing(board, myPosition, -2, 1));
+            validMoves.addAll(getKnightKing(board, myPosition, -2, -1));
+            validMoves.addAll(getKnightKing(board, myPosition, 1, 2));
+            validMoves.addAll(getKnightKing(board, myPosition, 1, -2));
+            validMoves.addAll(getKnightKing(board, myPosition, -1, 2));
+            validMoves.addAll(getKnightKing(board, myPosition, -1, -2));
+        }
 
 
         return validMoves;
