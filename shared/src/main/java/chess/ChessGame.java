@@ -11,11 +11,24 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessGame {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessGame chessGame=(ChessGame) o;
+        return Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, currentTurn);
+    }
 
     private ChessBoard board = new ChessBoard();
     private TeamColor currentTurn;
 
     public ChessGame() {
+        board.resetBoard();
         currentTurn = TeamColor.WHITE;
     }
 
@@ -69,27 +82,6 @@ public class ChessGame {
             return moveList;
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ChessGame{" +
-                "b=" + board +
-                ", ct=" + currentTurn +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ChessGame chessGame=(ChessGame) o;
-        return Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(board, currentTurn);
     }
 
     /**
@@ -185,27 +177,24 @@ public class ChessGame {
                 ChessPosition currentPosition = new ChessPosition(i, j);
                 ChessPiece currentPiece = board.getPiece(currentPosition);
                 if (currentPiece != null && currentPiece.getTeamColor() == teamColor) {
-                    hasPieces = true; // Found at least one piece for the team
-                    break; // No need to continue checking
+                    hasPieces = true;
+                    break;
                 }
             }
             if (hasPieces) {
-                break; // Exit outer loop if a piece was found
+                break;
             }
         }
 
-        // If there are no pieces, the game is still ongoing, and it can't be stalemate
         if (!hasPieces) {
             return false;
         }
 
-        // Now check for valid moves
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition currentPosition = new ChessPosition(i, j);
                 ChessPiece currentPiece = board.getPiece(currentPosition);
                 if (currentPiece != null && currentPiece.getTeamColor() == teamColor) {
-                    // If any piece has valid moves, return false (not stalemate)
                     if (!validMoves(currentPosition).isEmpty()) {
                         return false;
                     }
@@ -213,8 +202,7 @@ public class ChessGame {
             }
         }
 
-        // If we reach here, no valid moves were found for the team
-        return true; // It's stalemate
+        return true;
     }
 
     /**
