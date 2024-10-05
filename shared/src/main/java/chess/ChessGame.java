@@ -179,17 +179,42 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        Collection<ChessMove> allValidMoves = new ArrayList<>();
+        boolean hasPieces = false;
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition currentPosition = new ChessPosition(i, j);
                 ChessPiece currentPiece = board.getPiece(currentPosition);
                 if (currentPiece != null && currentPiece.getTeamColor() == teamColor) {
-                    allValidMoves.addAll(validMoves(currentPosition));
+                    hasPieces = true; // Found at least one piece for the team
+                    break; // No need to continue checking
+                }
+            }
+            if (hasPieces) {
+                break; // Exit outer loop if a piece was found
+            }
+        }
+
+        // If there are no pieces, the game is still ongoing, and it can't be stalemate
+        if (!hasPieces) {
+            return false;
+        }
+
+        // Now check for valid moves
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
+                ChessPosition currentPosition = new ChessPosition(i, j);
+                ChessPiece currentPiece = board.getPiece(currentPosition);
+                if (currentPiece != null && currentPiece.getTeamColor() == teamColor) {
+                    // If any piece has valid moves, return false (not stalemate)
+                    if (!validMoves(currentPosition).isEmpty()) {
+                        return false;
+                    }
                 }
             }
         }
-        return allValidMoves.isEmpty();
+
+        // If we reach here, no valid moves were found for the team
+        return true; // It's stalemate
     }
 
     /**
