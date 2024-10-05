@@ -32,12 +32,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        if (currentTurn == TeamColor.WHITE){
-            currentTurn = TeamColor.BLACK;
-        }
-        else {
-            currentTurn = TeamColor.WHITE;
-        }
+        currentTurn = team;
     }
 
     /**
@@ -107,10 +102,10 @@ public class ChessGame {
         ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
         ChessPiece piece = board.getPiece(move.getStartPosition());
         if (piece == null) {
-            throw new InvalidMoveException("Invalid Move");
+            throw new InvalidMoveException("No Piece here");
         }
-        if (piece.getTeamColor() == getTeamTurn()){
-            throw new InvalidMoveException("Invalid move");
+        if (piece.getTeamColor() != getTeamTurn()){
+            throw new InvalidMoveException("Wrong Color");
         }
         if (piece.pieceMoves(board, move.getStartPosition()).contains(move)){
             if (move.getPromotionPiece() == null){
@@ -123,12 +118,12 @@ public class ChessGame {
             if (isInCheck(piece.getTeamColor()) || isInCheckmate(piece.getTeamColor()) || isInStalemate(piece.getTeamColor())){
                 board.addPiece(move.getStartPosition(), piece);
                 board.addPiece(move.getEndPosition(), capturedPiece);
-                throw new InvalidMoveException("Invalid move");
+                throw new InvalidMoveException("Dangerous Move");
             }
-            setTeamTurn(getTeamTurn());
+            setTeamTurn(getTeamTurn() == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE);
         }
         else {
-            throw new InvalidMoveException("Invalid move");
+            throw new InvalidMoveException("No moves possible");
         }
 
     }
