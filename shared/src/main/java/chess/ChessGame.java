@@ -70,7 +70,6 @@ public class ChessGame {
             Collection<ChessMove> moveList = new ArrayList<>();
             for (ChessMove move: allMoves) {
                 ChessPiece capturedPiece = board.getPiece(move.getEndPosition());
-                // if moving here does not put the team in check, then add to valid moves
                 board.addPiece(move.getEndPosition(), startPiece);
                 board.addPiece(move.getStartPosition(), null);
                 if (!isInCheck(startPiece.getTeamColor())) {
@@ -160,7 +159,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        return (isInStalemate(teamColor) && isInCheck(teamColor));
+        return (anyValidMoves(teamColor) && isInCheck(teamColor));
     }
 
     /**
@@ -171,6 +170,9 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
+        return (anyValidMoves(teamColor) && !isInCheck(teamColor));
+    }
+    public boolean anyValidMoves(TeamColor teamColor) {
         boolean hasPieces = false;
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
@@ -201,7 +203,6 @@ public class ChessGame {
                 }
             }
         }
-
         return true;
     }
 
