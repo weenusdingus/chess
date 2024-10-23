@@ -32,9 +32,9 @@ public class ServiceTests {
   @BeforeEach
   void setup() throws DataAccessException{
     dao = new MemoryDataAccess();
-    service = new UserService(dao);
+//    service = new UserService(dao);
     clearService = new ClearService(dao);
-    gameService = new GameService(dao);
+//    gameService = new GameService(dao);
     clearService.clear();
   }
 
@@ -50,3 +50,4 @@ public class ServiceTests {
     assertEquals(0, dao.getAuths().size());
     assertEquals(0, dao.getGames().size());
   }
+}
