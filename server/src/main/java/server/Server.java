@@ -35,7 +35,7 @@ public class Server {
         Spark.delete("/db", this::clearApplication);
         Spark.post("/user", this::register);
         Spark.post("/session", this::login);
-//        Spark.delete("/session", this::logout);
+        Spark.delete("/session", this::logout);
 //        Spark.get("/game", this::listGames);
 //        Spark.post("/game", this::createGame);
 //        Spark.put("/game", this::joinGame);
@@ -82,6 +82,20 @@ public class Server {
             AuthData auth = userService.login(user);
             res.status(200);
             return new Gson().toJson(auth);
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
+        } catch (Exception e) {
+            res.status(500);
+            return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+    public Object logout(Request req, Response res){
+        try {
+            String authToken = req.headers("authorization");
+            userService.logout(authToken);
+            res.status(200);
+            return "";
         } catch (UnauthorizedException e) {
             res.status(401);
             return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
