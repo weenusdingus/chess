@@ -91,4 +91,50 @@ public class ServiceTests {
       service.logout(auth.authToken());
     });
   }
+  @Test
+  void testListGames() throws DataAccessException, UnauthorizedException {
+    dao.createAuth(auth);
+    dao.createGame(game);
+    dao.createGame(game);
+    dao.createGame(game);
+    assertEquals(3, gameService.listGames(auth.authToken()).size());
+  }
+  @Test
+  void testListGamesFail(){
+    assertThrows(UnauthorizedException.class, () -> {
+      gameService.listGames(auth.authToken());
+    });
+  }
+  @Test
+  void testCreateGame() throws UnauthorizedException, BadRequestException, DataAccessException {
+    dao.createAuth(auth);
+    gameService.createGame(game, auth.authToken());
+    gameService.createGame(game, auth.authToken());
+    gameService.createGame(game, auth.authToken());
+    assertEquals(3, gameService.listGames(auth.authToken()).size());
+  }
+  @Test
+  void testCreateGameFail(){
+    assertThrows(UnauthorizedException.class, () -> {
+      gameService.createGame(game, auth.authToken());
+    });
+    GameData badGame = new GameData(1, null,null,null,null);
+    assertThrows(BadRequestException.class, () -> {
+      gameService.createGame(badGame, auth.authToken());
+    });
+  }
+  @Test
+  void testJoinGame() throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
+    dao.createAuth(auth);
+    GameData goodGame = new GameData(1, null,null, "chess", null);
+    goodGame = dao.createGame(goodGame);
+    gameService.joinGame(auth.authToken(), "WHITE", goodGame.gameID());
+    assertEquals("username", dao.getGame(goodGame.gameID()).whiteUsername());
+  }
+  @Test
+  void testJoinGameFail() throws DataAccessException {
+    assertThrows(UnauthorizedException.class, () -> {
+      gameService.joinGame(auth.authToken(), "WHITE", 1);
+    });
+  }
 }
