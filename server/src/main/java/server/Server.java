@@ -13,6 +13,8 @@ import service.serviceExceptions.BadRequestException;
 import service.serviceExceptions.UnauthorizedException;
 import spark.*;
 
+import java.util.Collection;
+
 public class Server {
     private final UserService userService;
     private final GameService gameService;
@@ -36,7 +38,7 @@ public class Server {
         Spark.post("/user", this::register);
         Spark.post("/session", this::login);
         Spark.delete("/session", this::logout);
-//        Spark.get("/game", this::listGames);
+        Spark.get("/game", this::listGames);
 //        Spark.post("/game", this::createGame);
 //        Spark.put("/game", this::joinGame);
 
@@ -96,6 +98,21 @@ public class Server {
             userService.logout(authToken);
             res.status(200);
             return "";
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
+        } catch (Exception e) {
+            res.status(500);
+            return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+    public Object listGames(Request req, Response res){
+        try {
+            String authToken = req.headers("authorization");
+            Collection<GameData> games = gameService.listGames(authToken);
+            ListGameData listGames = new ListGameData(games);
+            res.status(200);
+            return new Gson().toJson(listGames);
         } catch (UnauthorizedException e) {
             res.status(401);
             return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
