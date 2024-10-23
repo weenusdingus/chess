@@ -34,7 +34,7 @@ public class Server {
         // Register your endpoints and handle exceptions here.
         Spark.delete("/db", this::clearApplication);
         Spark.post("/user", this::register);
-//        Spark.post("/session", this::login);
+        Spark.post("/session", this::login);
 //        Spark.delete("/session", this::logout);
 //        Spark.get("/game", this::listGames);
 //        Spark.post("/game", this::createGame);
@@ -71,6 +71,20 @@ public class Server {
         } catch (AlreadyTakenException e){
             res.status(403);
             return new Gson().toJson(new ErrorMessage("Error: already taken"));
+        } catch (Exception e) {
+            res.status(500);
+            return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+    public Object login(Request req, Response res) {
+        try {
+            UserData user = new Gson().fromJson(req.body(), UserData.class);
+            AuthData auth = userService.login(user);
+            res.status(200);
+            return new Gson().toJson(auth);
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
         } catch (Exception e) {
             res.status(500);
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
