@@ -39,7 +39,7 @@ public class Server {
         Spark.post("/session", this::login);
         Spark.delete("/session", this::logout);
         Spark.get("/game", this::listGames);
-//        Spark.post("/game", this::createGame);
+       Spark.post("/game", this::createGame);
 //        Spark.put("/game", this::joinGame);
 
         Spark.awaitInitialization();
@@ -116,6 +116,24 @@ public class Server {
         } catch (UnauthorizedException e) {
             res.status(401);
             return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
+        } catch (Exception e) {
+            res.status(500);
+            return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
+        }
+    }
+    public Object createGame(Request req, Response res){
+        try {
+            String authToken = req.headers("authorization");
+            GameData game = new Gson().fromJson(req.body(), GameData.class);
+            GameData newGame = gameService.createGame(game, authToken);
+            res.status(200);
+            return new Gson().toJson(newGame);
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return new Gson().toJson(new ErrorMessage("Error: unauthorized"));
+        } catch (BadRequestException e) {
+            res.status(400);
+            return new Gson().toJson(new ErrorMessage("Error: bad request"));
         } catch (Exception e) {
             res.status(500);
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
