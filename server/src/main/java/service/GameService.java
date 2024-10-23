@@ -42,7 +42,7 @@ public class GameService {
       throw new BadRequestException("Game does not exist");
     }
     if(color == null){
-      return;
+      throw new BadRequestException("Need player color");
     }
     if(color.equals("WHITE")){
       if(dataAccess.getGame(gameID).whiteUsername() != null){

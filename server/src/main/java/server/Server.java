@@ -28,7 +28,7 @@ public class Server {
         clearService = new ClearService(dataaccess);
     }
 
-    public int run(int desiredPort) {
+    public int run(int desiredPort){
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
@@ -50,7 +50,7 @@ public class Server {
         Spark.stop();
         Spark.awaitStop();
     }
-    record ErrorMessage (String message){}
+
     public Object clearApplication(Request req, Response res) throws DataAccessException {
         try {
             clearService.clear();
@@ -78,6 +78,7 @@ public class Server {
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
+
     public Object login(Request req, Response res) {
         try {
             UserData user = new Gson().fromJson(req.body(), UserData.class);
@@ -92,6 +93,7 @@ public class Server {
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
+
     public Object logout(Request req, Response res){
         try {
             String authToken = req.headers("authorization");
@@ -160,4 +162,6 @@ public class Server {
             return new Gson().toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
+    record ErrorMessage (String message){}
+
 }
