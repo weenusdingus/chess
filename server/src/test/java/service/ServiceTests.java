@@ -32,9 +32,9 @@ public class ServiceTests {
   @BeforeEach
   void setup() throws DataAccessException{
     dao = new MemoryDataAccess();
-//    service = new UserService(dao);
+    service = new UserService(dao);
     clearService = new ClearService(dao);
-//    gameService = new GameService(dao);
+    gameService = new GameService(dao);
     clearService.clear();
   }
 
@@ -49,5 +49,46 @@ public class ServiceTests {
     assertEquals(0, dao.getUsers().size());
     assertEquals(0, dao.getAuths().size());
     assertEquals(0, dao.getGames().size());
+  }
+  @Test
+  void testRegister() throws DataAccessException, AlreadyTakenException, BadRequestException {
+    auth = service.register(user);
+    assertNotNull(auth);
+    assertEquals(user.username(), auth.username());
+  }
+  @Test
+  void testRegisterFail() throws DataAccessException, AlreadyTakenException, BadRequestException {
+    auth = service.register(user);
+    assertThrows(AlreadyTakenException.class, () -> {
+      service.register(user);
+    });
+  }
+  @Test
+  void testLogin() throws DataAccessException, AlreadyTakenException, UnauthorizedException {
+    dao.createUser(user);
+    auth = service.login(user);
+    assertNotNull(auth);
+    assertEquals(user.username(), auth.username());
+  }
+  @Test
+  void testLoginFail() throws DataAccessException, AlreadyTakenException {
+    dao.createUser(user);
+    UserData badUser = new UserData("badUsername", "password", "email@email.com");
+    assertThrows(UnauthorizedException.class, () -> {
+      service.login(badUser);
+    });
+  }
+  @Test
+  void testLogout() throws DataAccessException, UnauthorizedException, AlreadyTakenException {
+    dao.createUser(user);
+    auth = service.login(user);
+    service.logout(auth.authToken());
+    assertNull(dao.getAuth(auth.authToken()));
+  }
+  @Test
+  void testLogoutFail() throws UnauthorizedException{
+    assertThrows(UnauthorizedException.class, () -> {
+      service.logout(auth.authToken());
+    });
   }
 }
