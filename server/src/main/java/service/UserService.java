@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import exception.ResponseException;
 import model.UserData;
 import model.AuthData;
 import service.serviceExceptions.AlreadyTakenException;

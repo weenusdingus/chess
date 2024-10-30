@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import exception.ResponseException;
 
 public class ClearService {
 
@@ -11,7 +12,7 @@ public class ClearService {
     this.dataAccess = dataAccess;
   }
 
-  public void clear() throws DataAccessException {
+  public void clear() throws DataAccessException{
     dataAccess.clear();
   }
 }
