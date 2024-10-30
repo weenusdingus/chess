@@ -73,4 +73,21 @@ public class DataAccessTests {
     assertEquals(originalAuth.authToken(), retrievedAuth.authToken(), "Auth should match");
     assertEquals(originalAuth.username(), retrievedAuth.username(), "Username should match");
   }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void deleteAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    String authToken = UUID.randomUUID().toString();
+    var auth = new AuthData(authToken, "username");
+    dataAccess.createAuth(auth);
+
+    AuthData retrievedAuth = dataAccess.getAuth(authToken);
+    assertNotNull(retrievedAuth, "Auth entry should be found in the database");
+
+    dataAccess.deleteAuth(authToken);
+
+    retrievedAuth = dataAccess.getAuth(authToken);
+    assertNull(retrievedAuth, "Auth entry should no longer exist in the database after deletion");
+  }
 }
