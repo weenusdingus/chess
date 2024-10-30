@@ -24,12 +24,16 @@ public class MySqlDataAccess {
               ‘gameName’ varchar (256) NOT NULL,
               ‘Game’ longtext NOT NULL
             )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS User (
               ‘username’ varchar (256) NOT NULL,
               ‘password’ varchar (256) NOT NULL,
               ‘email’ varchar (256) NOT NULL,
                PRIMARY KEY (‘username’)
             )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS Auth (
               ‘authToken’ varchar (256) NOT NULL PRIMARY KEY,
               ‘username’ varchar (256) NOT NULL
