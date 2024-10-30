@@ -60,4 +60,17 @@ public class DataAccessTests {
     var auth = new AuthData(UUID.randomUUID().toString(), "username");
     assertDoesNotThrow(() -> dataAccess.createAuth(auth));
   }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void getAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    String random = UUID.randomUUID().toString();
+    var originalAuth = new AuthData(random, "username");
+    dataAccess.createAuth(originalAuth);
+    AuthData retrievedAuth = dataAccess.getAuth(random);
+
+    assertNotNull(retrievedAuth, "Auth should be found in the database");
+    assertEquals(originalAuth.authToken(), retrievedAuth.authToken(), "Auth should match");
+    assertEquals(originalAuth.username(), retrievedAuth.username(), "Username should match");
+  }
 }
