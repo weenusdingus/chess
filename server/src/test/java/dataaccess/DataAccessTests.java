@@ -37,4 +37,17 @@ public class DataAccessTests {
     var user = new UserData("username", "joe", "email");
     assertDoesNotThrow(() -> dataAccess.createUser(user));
   }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void getUser(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var originalUser = new UserData("username", "password", "email@example.com");
+    dataAccess.createUser(originalUser);
+    UserData retrievedUser = dataAccess.getUser("username");
+
+    assertNotNull(retrievedUser, "User should be found in the database");
+    assertEquals(originalUser.username(), retrievedUser.username(), "Username should match");
+    assertEquals(originalUser.password(), retrievedUser.password(), "Password should match");
+    assertEquals(originalUser.email(), retrievedUser.email(), "Email should match");
+  }
 }
