@@ -97,25 +97,25 @@ public class MySqlDataAccess implements DataAccess {
   private final String[] createStatements = {
           """
             CREATE TABLE IF NOT EXISTS  game (
-              ‘gameID’ int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-              ‘whiteUsername’ varchar (256),
-              ‘blackUsername’ varchar (256),
-              ‘gameName’ varchar (256) NOT NULL,
-              ‘Game’ longtext NOT NULL
+              `gameID` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+              `whiteUsername` varchar (256),
+              `blackUsername` varchar (256),
+              `gameName` varchar (256) NOT NULL,
+              `Game` longtext NOT NULL
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS User (
-              ‘username’ varchar (256) NOT NULL,
-              ‘password’ varchar (256) NOT NULL,
-              ‘email’ varchar (256) NOT NULL,
-               PRIMARY KEY (‘username’)
+            CREATE TABLE IF NOT EXISTS user (
+              `username` varchar (256) NOT NULL,
+              `password` varchar (256) NOT NULL,
+              `email` varchar (256) NOT NULL,
+               PRIMARY KEY (`username`)
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS Auth (
-              ‘authToken’ varchar (256) NOT NULL PRIMARY KEY,
-              ‘username’ varchar (256) NOT NULL
+            CREATE TABLE IF NOT EXISTS auth (
+              `authToken` varchar (256) NOT NULL PRIMARY KEY,
+              `username` varchar (256) NOT NULL
             )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
   };
