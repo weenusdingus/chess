@@ -1,6 +1,7 @@
 package dataaccess;
 
 import exception.ResponseException;
+import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.sql.SQLException;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,5 +51,13 @@ public class DataAccessTests {
     assertEquals(originalUser.username(), retrievedUser.username(), "Username should match");
     assertEquals(originalUser.password(), retrievedUser.password(), "Password should match");
     assertEquals(originalUser.email(), retrievedUser.email(), "Email should match");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void createAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    var auth = new AuthData(UUID.randomUUID().toString(), "username");
+    assertDoesNotThrow(() -> dataAccess.createAuth(auth));
   }
 }

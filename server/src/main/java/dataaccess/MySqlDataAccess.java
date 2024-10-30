@@ -75,7 +75,9 @@ public class MySqlDataAccess implements DataAccess {
 
   @Override
   public AuthData createAuth(AuthData auth) throws DataAccessException {
-    return null;
+    var statement = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
+    executeUpdate(statement, auth.authToken(), auth.username());
+    return new AuthData(auth.authToken(), auth.username());
   }
 
   @Override
@@ -106,8 +108,6 @@ public class MySqlDataAccess implements DataAccess {
       }
     } catch (SQLException e) {
       throw new DataAccessException("Unable to update database: %s, %s");
-    } catch (DataAccessException e) {
-      throw new RuntimeException(e);
     }
   }
   private final String[] createStatements = {
