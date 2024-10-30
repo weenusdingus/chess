@@ -1,5 +1,6 @@
 package dataaccess;
 
+import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -55,7 +56,10 @@ public class MySqlDataAccess implements DataAccess {
 
   @Override
   public GameData createGame(GameData game) throws DataAccessException {
-    return null;
+    var statement = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, gameJson) VALUES (?,?,?,?,?)";
+    var gameJson = new Gson().toJson(game);
+    executeUpdate(statement, game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), gameJson);
+    return new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
   }
 
   @Override
@@ -133,7 +137,7 @@ public class MySqlDataAccess implements DataAccess {
               `whiteUsername` varchar (256),
               `blackUsername` varchar (256),
               `gameName` varchar (256) NOT NULL,
-              `Game` longtext NOT NULL
+              `gameJson` longtext NOT NULL
             )
             """,
             """
