@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import exception.ResponseException;
 import model.UserData;
 import model.AuthData;
+import org.mindrot.jbcrypt.BCrypt;
 import service.serviceExceptions.AlreadyTakenException;
 import service.serviceExceptions.BadRequestException;
 import service.serviceExceptions.UnauthorizedException;
@@ -33,7 +34,7 @@ public class UserService {
 
   public AuthData login(UserData user) throws DataAccessException, UnauthorizedException {
     UserData correctUser = dataAccess.getUser(user.username());
-    if ((correctUser != null) && (user.password().equals(correctUser.password()))) {
+    if ((correctUser != null) && (BCrypt.checkpw(user.password(), correctUser.password()))) {
       String auth = UUID.randomUUID().toString();
       return dataAccess.createAuth(new AuthData(auth, user.username()));
     }
