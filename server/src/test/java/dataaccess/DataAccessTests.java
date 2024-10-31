@@ -132,6 +132,29 @@ public class DataAccessTests {
     Collection<GameData> actual = dataAccess.listGames();
     assertGameCollectionEqual(expected, actual);
   }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void updateGame(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    GameData originalGame = new GameData(1, "alice", "bob", "Initial Match", new ChessGame());
+    GameData addedGame = dataAccess.createGame(originalGame);
+
+    GameData updatedGame = new GameData(addedGame.gameID(), "alice", "charlie", "Updated Match", new ChessGame());
+
+    dataAccess.updateGame(addedGame.gameID(), updatedGame);
+
+    GameData retrievedGame = dataAccess.getGame(addedGame.gameID());
+    assertGameDataEqual(updatedGame, retrievedGame);
+  }
+
+  private void assertGameDataEqual(GameData expected, GameData actual) {
+    assertEquals(expected.gameID(), actual.gameID(), "Game ID does not match.");
+    assertEquals(expected.whiteUsername(), actual.whiteUsername(), "White username does not match.");
+    assertEquals(expected.blackUsername(), actual.blackUsername(), "Black username does not match.");
+    assertEquals(expected.gameName(), actual.gameName(), "Game name does not match.");
+    assertEquals(expected.game(), actual.game(), "Chess game data does not match.");
+  }
 
   public static void assertGameCollectionEqual(Collection<GameData> expected, Collection<GameData> actual) {
       assertEquals(expected.size(), actual.size(), "Collections do not match in size.");
