@@ -1,7 +1,9 @@
 package dataaccess;
 
+import chess.ChessGame;
 import exception.ResponseException;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,7 @@ public class DataAccessTests {
     db.clear();
     return db;
   }
+  ChessGame chessGame = new ChessGame();
 
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -89,5 +92,13 @@ public class DataAccessTests {
 
     retrievedAuth = dataAccess.getAuth(authToken);
     assertNull(retrievedAuth, "Auth entry should no longer exist in the database after deletion");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void createGame(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    var game = new GameData(1,"wusername" , "busername", "chessName", chessGame);
+    assertDoesNotThrow(() -> dataAccess.createGame(game));
   }
 }
