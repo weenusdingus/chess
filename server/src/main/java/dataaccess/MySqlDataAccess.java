@@ -60,8 +60,8 @@ public class MySqlDataAccess implements DataAccess {
   public GameData createGame(GameData game) throws DataAccessException {
     var statement = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, gameJson) VALUES (?,?,?,?,?)";
     var gameJson = new Gson().toJson(game);
-    executeUpdate(statement, game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), gameJson);
-    return new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+    int generatedGameID = executeUpdate(statement, game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), gameJson);
+    return new GameData(generatedGameID, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
   }
 
   @Override
@@ -164,7 +164,7 @@ public class MySqlDataAccess implements DataAccess {
     var game = new Gson().fromJson(gameJson, ChessGame.class);
     return new GameData(gameID, whiteUsername, blackUsername, gameName, game);
   }
-  private void executeUpdate(String statement, Object... params) throws DataAccessException {
+  private int executeUpdate(String statement, Object... params) throws DataAccessException {
     try (var conn = DatabaseManager.getConnection()) {
       try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
         for (var i = 0; i < params.length; i++) {
@@ -177,9 +177,10 @@ public class MySqlDataAccess implements DataAccess {
 
         var rs = ps.getGeneratedKeys();
         if (rs.next()) {
-          rs.getInt(1);
+          return rs.getInt(1);
         }
 
+        return 0;
       }
     } catch (SQLException e) {
       throw new DataAccessException("Unable to update database: %s, %s");
