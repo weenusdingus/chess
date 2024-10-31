@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 import exception.ResponseException;
 import model.*;
 import service.ClearService;
@@ -20,10 +21,15 @@ public class Server {
     private final UserService userService;
     private final GameService gameService;
     private final ClearService clearService;
-    private final DataAccess dataaccess;
+    private DataAccess dataaccess;
 
     public Server() {
-        dataaccess = new MemoryDataAccess();
+        try {
+            dataaccess = new MySqlDataAccess();
+        } catch (DataAccessException e) {
+            System.err.println("Falling back to memory");
+            dataaccess = new MemoryDataAccess();
+        }
         userService = new UserService(dataaccess);
         gameService = new GameService(dataaccess);
         clearService = new ClearService(dataaccess);

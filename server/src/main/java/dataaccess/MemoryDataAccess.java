@@ -49,7 +49,7 @@ public class MemoryDataAccess implements DataAccess {
 
   @Override
   public GameData createGame(GameData game) throws DataAccessException {
-    GameData newGame = new GameData(++nextGameId, null, null, game.gameName(), new ChessGame());
+    GameData newGame = new GameData(++nextGameId, game.whiteUsername(), game.blackUsername(), game.gameName(), new ChessGame());
     games.put(nextGameId, newGame);
     return newGame;
   }
