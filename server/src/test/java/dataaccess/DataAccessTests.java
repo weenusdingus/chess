@@ -17,6 +17,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,5 +118,25 @@ public class DataAccessTests {
     assertEquals(originalGame.blackUsername(), retrievedGame.blackUsername(), "Black username should match");
     assertEquals(originalGame.gameName(), retrievedGame.gameName(), "Game name should match");
     assertEquals(originalGame.game(), retrievedGame.game(), "Game should match");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void listGames(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    List<GameData> expected = new ArrayList<>();
+    expected.add(dataAccess.createGame(new GameData(1, "alice", "bob", "Friendly Match", new ChessGame())));
+    expected.add(dataAccess.createGame(new GameData(2, "carol", "dave", "Ranked Game", new ChessGame())));
+    expected.add(dataAccess.createGame(new GameData(3, "eve", "frank", "Tournament", new ChessGame())));
+
+    Collection<GameData> actual = dataAccess.listGames();
+    assertGameCollectionEqual(expected, actual);
+  }
+
+  public static void assertGameCollectionEqual(Collection<GameData> expected, Collection<GameData> actual) {
+      assertEquals(expected.size(), actual.size(), "Collections do not match in size.");
+      for (GameData game : expected) {
+        assertTrue(actual.contains(game), "Expected game data not found in actual collection: " + game);
+      }
   }
 }
