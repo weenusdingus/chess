@@ -1,10 +1,12 @@
 package dataaccess;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.sql.*;
 
@@ -64,12 +66,38 @@ public class MySqlDataAccess implements DataAccess {
 
   @Override
   public GameData getGame(int gameID) throws DataAccessException {
+    try (var conn = DatabaseManager.getConnection()) {
+      var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, gameJson FROM game WHERE gameID=?";
+      try (var ps = conn.prepareStatement(statement)) {
+        ps.setInt(1, gameID);
+        try (var rs = ps.executeQuery()) {
+          if (rs.next()) {
+            return readGame(rs);
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new DataAccessException("Unable to read game data: %s"+ e.getMessage());
+    }
     return null;
   }
 
   @Override
   public Collection<GameData> listGames() throws DataAccessException {
-    return null;
+    var result = new ArrayList<GameData>();
+    try (var conn = DatabaseManager.getConnection()) {
+      var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM games";
+      try (var ps = conn.prepareStatement(statement)) {
+        try (var rs = ps.executeQuery()) {
+          while (rs.next()) {
+            result.add(readGame(rs));
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new DataAccessException("Unable to read game data: %s"+ e.getMessage());
+    }
+    return result;
   }
 
   @Override
@@ -108,6 +136,15 @@ public class MySqlDataAccess implements DataAccess {
   public void deleteAuth(String authToken) throws DataAccessException {
     var statement = "DELETE FROM auth WHERE authToken=?";
     executeUpdate(statement, authToken);
+  }
+  private GameData readGame(ResultSet rs) throws SQLException {
+    var gameID = rs.getInt("gameID");
+    var whiteUsername = rs.getString("whiteUsername");
+    var blackUsername = rs.getString("blackUsername");
+    var gameName = rs.getString("gameName");
+    var gameJson = rs.getString("gameJson");
+    var game = new Gson().fromJson(gameJson, ChessGame.class);
+    return new GameData(gameID, whiteUsername, blackUsername, gameName, game);
   }
   private void executeUpdate(String statement, Object... params) throws DataAccessException {
     try (var conn = DatabaseManager.getConnection()) {

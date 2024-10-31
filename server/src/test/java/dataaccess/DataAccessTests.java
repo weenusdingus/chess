@@ -101,4 +101,19 @@ public class DataAccessTests {
     var game = new GameData(1,"wusername" , "busername", "chessName", chessGame);
     assertDoesNotThrow(() -> dataAccess.createGame(game));
   }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void getGame(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var originalGame = new GameData(1,"wusername" , "busername", "chessName", chessGame);
+    dataAccess.createGame(originalGame);
+    GameData retrievedGame = dataAccess.getGame(originalGame.gameID());
+
+    assertNotNull(retrievedGame, "Game should be found in the database");
+    assertEquals(originalGame.gameID(), retrievedGame.gameID(), "Game ID should match");
+    assertEquals(originalGame.whiteUsername(), retrievedGame.whiteUsername(), "White username should match");
+    assertEquals(originalGame.blackUsername(), retrievedGame.blackUsername(), "Black username should match");
+    assertEquals(originalGame.gameName(), retrievedGame.gameName(), "Game name should match");
+    assertEquals(originalGame.game(), retrievedGame.game(), "Game should match");
+  }
 }
