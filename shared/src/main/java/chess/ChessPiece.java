@@ -213,15 +213,12 @@ public class ChessPiece {
             validMoves.addAll(getKnightKing(board, myPosition, -1, 1));//BottomRight
         }
         if(this.getPieceType() == PieceType.PAWN && this.pieceColor == ChessGame.TeamColor.WHITE){
-            //starting position
             if (myRow == 2){
                 addPawnDoubleMove(validMoves, board, myPosition);
             }
-            //regular move no promotion
             if (myRow < 7){
                 addPawnMove(validMoves, board, myPosition,myRow +1, myCol);
             }
-            //capture no promotion
             if (myRow < 7) {
                 if (myCol < 8) {
                     addPawnCapture(validMoves, board, myPosition, myRow + 1, myCol + 1, false);
@@ -230,15 +227,11 @@ public class ChessPiece {
                     addPawnCapture(validMoves, board, myPosition, myRow + 1, myCol - 1, false);
                 }
             }
-            //promotion
             if (myRow == 7) {
-                // normal promotion
                 ChessPosition forwardPosition = new ChessPosition(myRow + 1, myCol);
                 if (board.getPiece(forwardPosition) == null) {
                     addPawnPromotionMoves(validMoves, myPosition, forwardPosition);
                 }
-
-                // capture promotion
                 if (myCol < 8) {
                     ChessPosition captureRight = new ChessPosition(myRow + 1, myCol + 1);
                     addPawnCapture(validMoves, board, myPosition, myRow + 1, myCol + 1, true);
@@ -250,15 +243,12 @@ public class ChessPiece {
             }
         }
         if(this.getPieceType() == PieceType.PAWN && this.pieceColor == ChessGame.TeamColor.BLACK){
-            //starting position
             if (myRow == 7){
                 addPawnDoubleMove(validMoves, board, myPosition);
             }
-            //regular move no promotion
             if (myRow > 2){
                 addPawnMove(validMoves, board, myPosition,myRow - 1, myCol);
             }
-            //capture no promotion
             if (myRow > 2) {
                 if (myCol < 8) {
                     addPawnCapture(validMoves, board, myPosition, myRow - 1, myCol + 1, false);
@@ -267,15 +257,11 @@ public class ChessPiece {
                     addPawnCapture(validMoves, board, myPosition, myRow - 1, myCol - 1, false);
                 }
             }
-            //promotion
             if (myRow == 2) {
-                // normal promotion
                 ChessPosition forwardPosition = new ChessPosition(myRow - 1, myCol);
                 if (board.getPiece(forwardPosition) == null) {
                     addPawnPromotionMoves(validMoves, myPosition, forwardPosition);
                 }
-
-                // capture promotion
                 if (myCol < 8) {
                     ChessPosition captureRight = new ChessPosition(myRow - 1, myCol + 1);
                     addPawnCapture(validMoves, board, myPosition, myRow - 1, myCol + 1, true);
@@ -286,7 +272,6 @@ public class ChessPiece {
                 }
             }
         }
-
         return validMoves;
     }
 }
