@@ -3,9 +3,9 @@ package service;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.GameData;
-import service.serviceExceptions.AlreadyTakenException;
-import service.serviceExceptions.BadRequestException;
-import service.serviceExceptions.UnauthorizedException;
+import service.serviceexceptions.AlreadyTakenException;
+import service.serviceexceptions.BadRequestException;
+import service.serviceexceptions.UnauthorizedException;
 
 import java.util.Collection;
 

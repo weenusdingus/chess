@@ -1,4 +1,4 @@
-package service.serviceExceptions;
+package service.serviceexceptions;
 
 public class AlreadyTakenException extends Exception{
   public AlreadyTakenException(String message){

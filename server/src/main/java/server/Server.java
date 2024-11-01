@@ -5,14 +5,13 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import dataaccess.MySqlDataAccess;
-import exception.ResponseException;
 import model.*;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
-import service.serviceExceptions.AlreadyTakenException;
-import service.serviceExceptions.BadRequestException;
-import service.serviceExceptions.UnauthorizedException;
+import service.serviceexceptions.AlreadyTakenException;
+import service.serviceexceptions.BadRequestException;
+import service.serviceexceptions.UnauthorizedException;
 import spark.*;
 
 import java.util.Collection;

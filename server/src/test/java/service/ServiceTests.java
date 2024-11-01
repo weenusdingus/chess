@@ -7,12 +7,9 @@ import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.ClearService;
-import service.GameService;
-import service.UserService;
-import service.serviceExceptions.AlreadyTakenException;
-import service.serviceExceptions.BadRequestException;
-import service.serviceExceptions.UnauthorizedException;
+import service.serviceexceptions.AlreadyTakenException;
+import service.serviceexceptions.BadRequestException;
+import service.serviceexceptions.UnauthorizedException;
 
 import java.util.UUID;
 

@@ -2,13 +2,12 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import exception.ResponseException;
 import model.UserData;
 import model.AuthData;
 import org.mindrot.jbcrypt.BCrypt;
-import service.serviceExceptions.AlreadyTakenException;
-import service.serviceExceptions.BadRequestException;
-import service.serviceExceptions.UnauthorizedException;
+import service.serviceexceptions.AlreadyTakenException;
+import service.serviceexceptions.BadRequestException;
+import service.serviceexceptions.UnauthorizedException;
 
 import java.util.UUID;
 

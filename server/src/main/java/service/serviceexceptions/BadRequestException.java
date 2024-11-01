@@ -1,4 +1,4 @@
-package service.serviceExceptions;
+package service.serviceexceptions;
 
 public class BadRequestException extends Exception{
   public BadRequestException(String message){
