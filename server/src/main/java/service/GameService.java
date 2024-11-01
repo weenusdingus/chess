@@ -34,7 +34,8 @@ public class GameService {
     }
     return dataAccess.listGames();
   }
-  public void joinGame(String authToken, String color, int gameID) throws UnauthorizedException, DataAccessException, BadRequestException, AlreadyTakenException {
+  public void joinGame(String authToken, String color, int gameID) throws UnauthorizedException,
+          DataAccessException, BadRequestException, AlreadyTakenException {
     if(dataAccess.getAuth(authToken) == null){
       throw new UnauthorizedException("Unauthorized");
     }
@@ -49,7 +50,8 @@ public class GameService {
         throw new AlreadyTakenException("Already taken");
       }
       else{
-        GameData game = new GameData(gameID, dataAccess.getAuth(authToken).username(), dataAccess.getGame(gameID).blackUsername(), dataAccess.getGame(gameID).gameName(), dataAccess.getGame(gameID).game());
+        GameData game = new GameData(gameID, dataAccess.getAuth(authToken).username(),
+                dataAccess.getGame(gameID).blackUsername(), dataAccess.getGame(gameID).gameName(), dataAccess.getGame(gameID).game());
         dataAccess.updateGame(gameID, game);
       }
     }
@@ -58,7 +60,8 @@ public class GameService {
         throw new AlreadyTakenException("Already Taken");
       }
       else{
-        GameData game = new GameData(gameID, dataAccess.getGame(gameID).whiteUsername(), dataAccess.getAuth(authToken).username(), dataAccess.getGame(gameID).gameName(), dataAccess.getGame(gameID).game());
+        GameData game = new GameData(gameID, dataAccess.getGame(gameID).whiteUsername(),
+                dataAccess.getAuth(authToken).username(), dataAccess.getGame(gameID).gameName(), dataAccess.getGame(gameID).game());
         dataAccess.updateGame(gameID, game);
       }
     }

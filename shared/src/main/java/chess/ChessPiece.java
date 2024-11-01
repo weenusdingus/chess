@@ -133,7 +133,8 @@ public class ChessPiece {
         }
     }
 
-    private void addPawnCapture(Collection<ChessMove> validMoves, ChessBoard board, ChessPosition myPosition, int newRow, int newCol, boolean isPromotion) {
+    private void addPawnCapture(Collection<ChessMove> validMoves, ChessBoard board,
+                                ChessPosition myPosition, int newRow, int newCol, boolean isPromotion) {
         ChessPosition checkPosition = new ChessPosition(newRow, newCol);
         if (board.getPiece(checkPosition) != null && board.getPiece(checkPosition).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
             if (isPromotion) {
