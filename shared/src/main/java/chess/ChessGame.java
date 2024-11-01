@@ -126,26 +126,32 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        TeamColor advantageTeam;
-        if (teamColor == TeamColor.WHITE) {
-            advantageTeam = TeamColor.BLACK;
-        }
-        else {
-            advantageTeam = TeamColor.WHITE;
-        }
+        TeamColor advantageTeam = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+
         for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition currentPosition = new ChessPosition(i, j);
                 ChessPiece currentPiece = board.getPiece(currentPosition);
-                if (currentPiece != null && currentPiece.getTeamColor() == advantageTeam) {
-                    Collection<ChessMove> currentValidMoves = currentPiece.pieceMoves(board, currentPosition);
-                    for (ChessMove currentMove : currentValidMoves) {
-                        if ((board.getPiece(currentMove.getEndPosition()) != null) &&
-                                (board.getPiece(currentMove.getEndPosition()).getPieceType() == ChessPiece.PieceType.KING)) {
-                            return true;
-                        }
+                if (isOpponentPiece(currentPiece, advantageTeam)) {
+                    if (isKingAttacked(currentPiece, currentPosition)) {
+                        return true;
                     }
                 }
+            }
+        }
+        return false;
+    }
+
+    private boolean isOpponentPiece(ChessPiece piece, TeamColor advantageTeam) {
+        return piece != null && piece.getTeamColor() == advantageTeam;
+    }
+
+    private boolean isKingAttacked(ChessPiece currentPiece, ChessPosition currentPosition) {
+        Collection<ChessMove> currentValidMoves = currentPiece.pieceMoves(board, currentPosition);
+        for (ChessMove currentMove : currentValidMoves) {
+            ChessPiece targetPiece = board.getPiece(currentMove.getEndPosition());
+            if (targetPiece != null && targetPiece.getPieceType() == ChessPiece.PieceType.KING) {
+                return true;
             }
         }
         return false;
