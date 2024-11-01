@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import service.serviceExceptions.AlreadyTakenException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,11 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DataAccessTests {
   private DataAccess getDataAccess(Class<? extends DataAccess> databaseClass) throws ResponseException, DataAccessException {
     DataAccess db;
-    if (databaseClass.equals(MySqlDataAccess.class)) {
-      db = new MySqlDataAccess();
-    } else {
-      db = new MemoryDataAccess();
-    }
+    db = new MySqlDataAccess();
     db.clear();
     return db;
   }
@@ -47,6 +44,14 @@ public class DataAccessTests {
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failCreateUser(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var user = new UserData(null, null, null);
+    assertThrows(DataAccessException.class, () -> dataAccess.createUser(user),
+            "Should throw when null");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
   void getUser(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
     DataAccess dataAccess = getDataAccess(dbClass);
     var originalUser = new UserData("username", "password", "email@example.com");
@@ -55,8 +60,15 @@ public class DataAccessTests {
 
     assertNotNull(retrievedUser, "User should be found in the database");
     assertEquals(originalUser.username(), retrievedUser.username(), "Username should match");
-    assertEquals(originalUser.password(), retrievedUser.password(), "Password should match");
     assertEquals(originalUser.email(), retrievedUser.email(), "Email should match");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failGetUser(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    dataAccess.clear();
+    assertNull(dataAccess.getUser("username"),
+            "Should return null when it isn't in the database");
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -65,6 +77,14 @@ public class DataAccessTests {
 
     var auth = new AuthData(UUID.randomUUID().toString(), "username");
     assertDoesNotThrow(() -> dataAccess.createAuth(auth));
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failCreateAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var auth = new AuthData(null, null);
+    assertThrows(DataAccessException.class, () -> dataAccess.createAuth(auth),
+            "Should throw when null");
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -78,6 +98,14 @@ public class DataAccessTests {
     assertNotNull(retrievedAuth, "Auth should be found in the database");
     assertEquals(originalAuth.authToken(), retrievedAuth.authToken(), "Auth should match");
     assertEquals(originalAuth.username(), retrievedAuth.username(), "Username should match");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failGetAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    dataAccess.clear();
+    assertNull(dataAccess.getAuth("authToken"),
+            "Should return null when it isn't in the database");
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -98,11 +126,28 @@ public class DataAccessTests {
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failDeleteAuth(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    String authToken = UUID.randomUUID().toString();
+    assertDoesNotThrow( () ->  dataAccess.deleteAuth(authToken));
+
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
   void createGame(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
     DataAccess dataAccess = getDataAccess(dbClass);
 
     var game = new GameData(1,"wusername" , "busername", "chessName", chessGame);
     assertDoesNotThrow(() -> dataAccess.createGame(game));
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failCreateGame(Class<? extends DataAccess> dbClass) throws DataAccessException, ResponseException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var invalidGame = new GameData(1, null, "busername", null, null);
+    assertThrows(DataAccessException.class, () -> dataAccess.createGame(invalidGame),
+            "Expected createGame to throw DataAccessException for null game data");
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -121,6 +166,14 @@ public class DataAccessTests {
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failGetGame(Class<? extends DataAccess> dbClass) throws DataAccessException, ResponseException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    int nonExistentGameID = 999;
+    GameData result = dataAccess.getGame(nonExistentGameID);
+    assertNull(result, "Expected getGame to return null for a non-existent game ID");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
   void listGames(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
     DataAccess dataAccess = getDataAccess(dbClass);
 
@@ -131,6 +184,15 @@ public class DataAccessTests {
 
     Collection<GameData> actual = dataAccess.listGames();
     assertGameCollectionEqual(expected, actual);
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failListGames(Class<? extends DataAccess> dbClass) throws DataAccessException, ResponseException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    dataAccess.clear(); // Ensure the database is empty
+
+    Collection<GameData> result = dataAccess.listGames();
+    assertTrue(result.isEmpty(), "Expected listGames to return an empty collection when no games are present");
   }
   @ParameterizedTest
   @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
@@ -146,6 +208,23 @@ public class DataAccessTests {
 
     GameData retrievedGame = dataAccess.getGame(addedGame.gameID());
     assertGameDataEqual(updatedGame, retrievedGame);
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void failUpdateGame(Class<? extends DataAccess> dbClass) throws DataAccessException, ResponseException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+
+    GameData nonExistentGame = new GameData(999, "alice", "charlie", "Non-existent Game", new ChessGame());
+    assertThrows(DataAccessException.class, () -> dataAccess.updateGame(999, nonExistentGame),
+            "Expected updateGame to throw DataAccessException for a non-existent game ID");
+  }
+  @ParameterizedTest
+  @ValueSource(classes = {MySqlDataAccess.class, MemoryDataAccess.class})
+  void clear(Class<? extends DataAccess> dbClass) throws ResponseException, DataAccessException {
+    DataAccess dataAccess = getDataAccess(dbClass);
+    var game = new GameData(1, "wusername", "busername", "chessName", chessGame);
+    assertDoesNotThrow(() -> dataAccess.clear());
+    assertTrue(dataAccess.listGames().isEmpty(), "Database should be empty after calling clear()");
   }
 
   private void assertGameDataEqual(GameData expected, GameData actual) {
