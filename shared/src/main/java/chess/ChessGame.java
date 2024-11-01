@@ -140,10 +140,9 @@ public class ChessGame {
                 if (currentPiece != null && currentPiece.getTeamColor() == advantageTeam) {
                     Collection<ChessMove> currentValidMoves = currentPiece.pieceMoves(board, currentPosition);
                     for (ChessMove currentMove : currentValidMoves) {
-                        if (board.getPiece(currentMove.getEndPosition()) != null) {
-                            if (board.getPiece(currentMove.getEndPosition()).getPieceType() == ChessPiece.PieceType.KING) {
-                                return true;
-                            }
+                        if ((board.getPiece(currentMove.getEndPosition()) != null) &&
+                                (board.getPiece(currentMove.getEndPosition()).getPieceType() == ChessPiece.PieceType.KING)) {
+                            return true;
                         }
                     }
                 }
