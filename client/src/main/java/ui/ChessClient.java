@@ -1,19 +1,26 @@
 package ui;
 
-import exception.ResponseException;
-import model.UserData;
+import model.GameData;
 import server.ServerFacade;
+import request.*;
+import response.*;
+import exception.ResponseException;
+import chess.ChessGame.TeamColor;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ChessClient {
   private final ServerFacade serverFacade;
-  private boolean loggedIn = false;
-  private Scanner scanner;
+  private final Scanner scanner;
+  private boolean loggedIn;
+  private String authToken;
 
   public ChessClient(String serverUrl) {
     this.serverFacade = new ServerFacade(serverUrl);
     this.scanner = new Scanner(System.in);
+    this.loggedIn = false;
+    this.authToken = null;
   }
 
   public void start() {
@@ -27,63 +34,38 @@ public class ChessClient {
   }
 
   private void preloginMenu() {
-    System.out.println("\nRemi's Chess app");
-    System.out.println("\nEnter a command to continue:");
+    System.out.println("\nPrelogin Menu - Enter a command:");
     System.out.println("help, register, login, quit");
 
     String command = scanner.nextLine().trim().toLowerCase();
     switch (command) {
-      case "help":
-        displayHelp(false);
-        break;
-      case "register":
-        register();
-        break;
-      case "login":
-        login();
-        break;
-      case "quit":
-        quit();
-        break;
-      default:
-        System.out.println("Invalid command. Type 'help' for options.");
+      case "help" -> displayHelp(false);
+      case "register" -> register();
+      case "login" -> login();
+      case "quit" -> quit();
+      default -> System.out.println("Invalid command. Type 'help' for options.");
     }
   }
 
   private void postloginMenu() {
-    System.out.println("\nEnter a command to continue:");
-    System.out.println("help, logout, create game, list games, play game, observe game, quit");
+    System.out.println("\nPostlogin Menu - Enter a command:");
+    System.out.println("help, logout, create game, list games, play game, quit");
 
     String command = scanner.nextLine().trim().toLowerCase();
     switch (command) {
-      case "help":
-        displayHelp(true);
-        break;
-      case "logout":
-        logout();
-        break;
-      case "create game":
-        createGame();
-        break;
-      case "list games":
-        listGames();
-        break;
-      case "play game":
-        playGame();
-        break;
-      case "observe game":
-        observeGame();
-        break;
-      case "quit":
-        quit();
-        break;
-      default:
-        System.out.println("Invalid command. Type 'help' for options.");
+      case "help" -> displayHelp(true);
+      case "logout" -> logout();
+      case "create game" -> createGame();
+      case "list games" -> listGames();
+      case "play game" -> playGame();
+      case "quit" -> quit();
+      default -> System.out.println("Invalid command. Type 'help' for options.");
     }
   }
+
   private void displayHelp(boolean loggedIn) {
     if (loggedIn) {
-      System.out.println("Available commands: help, logout, create game, list games, play game, observe game, quit");
+      System.out.println("Available commands: help, logout, create game, list games, play game, quit");
     } else {
       System.out.println("Available commands: help, register, login, quit");
     }
@@ -97,11 +79,11 @@ public class ChessClient {
     System.out.print("Enter email: ");
     String email = scanner.nextLine();
 
-    UserData newUser = new UserData(username, password, email);
-
     try {
-      serverFacade.createUser(newUser);
-      loggedIn = true;
+      var request = new RegisterRequest(username, password, email);
+      var response = serverFacade.register(request);
+      this.authToken = response.authToken();
+      this.loggedIn = true;
       System.out.println("Registration successful! You are now logged in.");
     } catch (ResponseException e) {
       System.out.println("Registration failed: " + e.getMessage());
@@ -115,24 +97,24 @@ public class ChessClient {
     String password = scanner.nextLine();
 
     try {
-      serverFacade.login(username, password);
-      loggedIn = true;
+      var request = new LoginRequest(username, password);
+      var response = serverFacade.login(request);
+      this.authToken = response.authToken();
+      this.loggedIn = true;
       System.out.println("Login successful!");
-    } catch (DataAccessException e) {
+    } catch (ResponseException e) {
       System.out.println("Login failed: " + e.getMessage());
     }
   }
 
-  private void quit() {
-    System.out.println("Goodbye!");
-    System.exit(0);
-  }
   private void logout() {
     try {
-      serverFacade.logout();
-      loggedIn = false;
+      var request = new LogoutRequest(authToken);
+      serverFacade.logout(request);
+      this.authToken = null;
+      this.loggedIn = false;
       System.out.println("Logged out successfully.");
-    } catch (DataAccessException e) {
+    } catch (ResponseException e) {
       System.out.println("Logout failed: " + e.getMessage());
     }
   }
@@ -142,22 +124,27 @@ public class ChessClient {
     String gameName = scanner.nextLine();
 
     try {
-      serverFacade.createGame(gameName);
+      var request = new CreateGameRequest(authToken, gameName);
+      serverFacade.create(request);
       System.out.println("Game created successfully.");
-    } catch (DataAccessException e) {
+    } catch (ResponseException e) {
       System.out.println("Failed to create game: " + e.getMessage());
     }
   }
 
   private void listGames() {
     try {
-      var games = serverFacade.listGames();
+      var request = new GetGamesRequest(authToken);
+      var response = serverFacade.list(request);
+      ArrayList<GameData> games = (ArrayList<GameData>) response.games();
+
       System.out.println("Available games:");
-      int index = 1;
-      for (var game : games) {
-        System.out.printf("%d. %s - Players: %s%n", index++, game.getName(), game.getPlayers());
+      for (int i = 0; i < games.size(); i++) {
+        GameData game = games.get(i);
+        System.out.printf("%d. Game name: %-8s White: %-8s Black: %-8s\n",
+        i + 1, game.gameName(), game.whiteUsername(), game.blackUsername());
       }
-    } catch (DataAccessException e) {
+    } catch (ResponseException e) {
       System.out.println("Failed to list games: " + e.getMessage());
     }
   }
@@ -165,31 +152,30 @@ public class ChessClient {
   private void playGame() {
     System.out.print("Enter the number of the game you want to join: ");
     int gameNumber = Integer.parseInt(scanner.nextLine());
+
     System.out.print("Choose color (white/black): ");
-    String color = scanner.nextLine();
+    String colorInput = scanner.nextLine().trim().toLowerCase();
+
+    TeamColor color;
+    if (colorInput.equals("white")) {
+      color = TeamColor.WHITE;
+    } else if (colorInput.equals("black")) {
+      color = TeamColor.BLACK;
+    } else {
+      System.out.println("Invalid color choice. Please choose 'white' or 'black'.");
+      return; // Exit the method if the input is invalid.
+    }
 
     try {
-      serverFacade.joinGame(gameNumber, color);
+      var request = new JoinGameRequest(authToken, color, gameNumber);
+      serverFacade.join(request);
       System.out.println("Joined game successfully.");
-      drawBoard(color.equals("white"));
-    } catch (DataAccessException e) {
+      drawBoard(color == TeamColor.WHITE);
+    } catch (ResponseException e) {
       System.out.println("Failed to join game: " + e.getMessage());
     }
   }
 
-  private void observeGame() {
-    System.out.print("Enter the number of the game you want to observe: ");
-    int gameNumber = Integer.parseInt(scanner.nextLine());
-
-    try {
-      serverFacade.observeGame(gameNumber);
-      System.out.println("Observing game:");
-      drawBoard(true);  // Draw initial board from white's perspective.
-      drawBoard(false); // Draw initial board from black's perspective.
-    } catch (DataAccessException e) {
-      System.out.println("Failed to observe game: " + e.getMessage());
-    }
-  }
   private void drawBoard(boolean whitePerspective) {
     char[][] board = {
             {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
@@ -206,12 +192,15 @@ public class ChessClient {
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         char piece = whitePerspective ? board[row][col] : board[7 - row][7 - col];
-        System.out.print((col % 2 == row % 2) ? piece : ' '); // Simple pattern for light/dark squares.
-        System.out.print(' ');
+        System.out.print(piece + " ");
       }
       System.out.println();
     }
   }
 
-
+  private void quit() {
+    System.out.println("Goodbye!");
+    System.exit(0);
+  }
 }
+
