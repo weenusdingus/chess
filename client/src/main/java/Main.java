@@ -22,7 +22,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        System.out.println("♕ Welcome to 240 Chess! Type 'help' to get started.♕");
+        System.out.println("♕ Welcome to 240 Chess! Type 'help' to get started ♕");
         preLoginUI();
     }
 
@@ -37,7 +37,7 @@ public class Main {
             String command = scanner.nextLine().trim().toLowerCase();
 
             switch (command) {
-                case "help" -> displayPreloginHelp();
+                case "help" -> displayPreLoginHelp();
                 case "register" -> register();
                 case "login" -> login();
                 case "quit" -> {
@@ -56,7 +56,7 @@ public class Main {
             String command = scanner.nextLine().trim().toLowerCase();
 
             switch (command) {
-                case "help" -> displayPostloginHelp();
+                case "help" -> displayPostLoginHelp();
                 case "logout" -> logout();
                 case "create" -> createGame();
                 case "list" -> listGames();
@@ -72,20 +72,20 @@ public class Main {
         preLoginUI();
     }
 
-    private static void displayPreloginHelp() {
-        System.out.println("Available commands:");
-        System.out.println("  register <username> <password> <email> - Register a new account");
-        System.out.println("  login <username> <password> - Login to your account");
-        System.out.println("  quit - Exit the application");
+    private static void displayPreLoginHelp() {
+        System.out.println("register <username> <password> <email> - to create an account");
+        System.out.println("login <username> <password> - to play chess");
+        System.out.println("quit - playing chess");
+        System.out.println("help - with possible commands");
     }
 
-    private static void displayPostloginHelp() {
-        System.out.println("Available commands:");
-        System.out.println("  create <gameName> - Create a new game");
-        System.out.println("  list - List all games");
-        System.out.println("  join - Join or observe a game");
-        System.out.println("  logout - Logout of your account");
-        System.out.println("  quit - Exit the application");
+    private static void displayPostLoginHelp() {
+        System.out.println("  create <name> - a game");
+        System.out.println("  list - games");
+        System.out.println("  join - join a game");
+        System.out.println("  logout - when you are done");
+        System.out.println("  quit - playing chess");
+        System.out.println("help - with possible commands");
     }
 
     private static void login() {
@@ -96,7 +96,7 @@ public class Main {
             String password = scanner.nextLine().trim();
 
             if (username.isEmpty() || password.isEmpty()) {
-                System.out.println("Username and password cannot be empty.");
+                System.out.println("Invalid entry");
                 return;
             }
 
@@ -106,7 +106,7 @@ public class Main {
         } catch (IOException e) {
             System.out.println("Invalid username or password.");
         } catch (Exception e) {
-            System.out.println("An error occurred. Please try again.");
+            System.out.println("Something went wrong.");
         }
     }
 
@@ -121,29 +121,28 @@ public class Main {
             String email = scanner.nextLine().trim();
 
             if (username.isEmpty() || password.isEmpty() || email.isEmpty()) {
-                System.out.println("All fields are required.");
+                System.out.println("Invalid entry");
                 return;
             }
 
             String response = serverFacade.register(username, password, email);
             authToken = extractAuthToken(response);
-            System.out.println("Welcome, " + username + "!");
+            System.out.println("Welcome back, " + username + "!");
         } catch (IOException e) {
-            System.out.println("Unable to register. Username may already be taken.");
+            System.out.println("Try a different username");
         } catch (Exception e) {
-            System.out.println("An error occurred. Please try again.");
+            System.out.println("Something went wrong");
         }
     }
 
     private static void logout() {
         try {
             serverFacade.logout(authToken);
-            System.out.println("Goodbye!");
             authToken = null;
         } catch (IOException e) {
-            System.out.println("Unable to logout. Please try again.");
+            System.out.println("Something went wrong");
         } catch (Exception e) {
-            System.out.println("An error occurred. Please try again.");
+            System.out.println("Something went wrong");
         }
     }
 
