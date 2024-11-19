@@ -3,7 +3,6 @@ package ui;
 import model.GameData;
 import server.ServerFacade;
 import request.*;
-import response.*;
 import exception.ResponseException;
 import chess.ChessGame.TeamColor;
 
