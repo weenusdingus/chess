@@ -1,186 +1,159 @@
 package client;
 
-import chess.ChessGame;
-import dataaccess.DataAccessException;
-import dataaccess.MySqlDataAccess;
-import exception.ResponseException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.*;
-import request.*;
-import response.*;
 import server.Server;
 import server.ServerFacade;
-
+import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class ServerFacadeTests {
-
     private static Server server;
-    private static String serverUrl;
-    private static ServerFacade serverFacade;
-    private static MySqlDataAccess database;
+    private static ServerFacade facade;
 
     @BeforeAll
-    public static void init() throws DataAccessException {
-        database = new MySqlDataAccess();
-        database.clear();
+    public static void init() throws InterruptedException {
         server = new Server();
-        var port = server.run(0);
-        serverUrl = "http://localhost:" + port;
-        serverFacade = new ServerFacade(serverUrl);
-
-
-        System.out.println("Started Main HTTP server on " + port);
+        int port = server.run(0);
+        System.out.println("Started test HTTP server on " + port);
+        facade = new ServerFacade("http://localhost:" + port);
+        Thread.sleep(1000);
     }
 
     @AfterAll
-    static void stopServer() {
+    public static void stopServer() {
         server.stop();
     }
 
+    @BeforeEach
+    public void clearDatabase() throws IOException {
+        URL url = new URL("http://localhost:" + server.getPort() + "/db");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("DELETE");
 
-    @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            System.out.println("Database cleared successfully.");
+        } else {
+            System.out.println("Failed to clear the database. Response code: " + responseCode);
+        }
     }
 
     @Test
-    public void registerSuccess() throws ResponseException {
-        var registerRequest = new RegisterRequest("pat", "ree", "ree@gmail.com");
-        var registerResponse = serverFacade.register(registerRequest);
-
-        var expectedResponse = new RegisterResponse("pat", "authToken");
-
-        Assertions.assertEquals(expectedResponse.username(), registerResponse.username());
-        Assertions.assertNotNull(registerResponse);
+    public void testRegisterPass() throws IOException {
+        String response = facade.register("newUser", "password123", "newuser@example.com");
+        assertNotNull(response);
+        assertTrue(response.contains("authToken"));
     }
 
     @Test
-    public void registerInvalidUsername() throws ResponseException {
-        var registerRequest = new RegisterRequest("", "ree", "ree@gmail.com");
-
-        Assertions.assertThrows(ResponseException.class, () -> {
-            var registerResponse = serverFacade.register(registerRequest);
+    public void testRegisterFail() {
+        assertThrows(IOException.class, () -> {
+            facade.register("", "", "");
         });
     }
 
     @Test
-    public void loginSuccess() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
+    public void testLoginPass() throws IOException {
+        facade.register("user", "password", "user@gmail.com");
 
-        var expectedResponse = new LoginResponse("pat", "authToken");
-        Assertions.assertEquals(expectedResponse.username(), loginResponse.username());
-        Assertions.assertNotNull(loginResponse);
+        String response = facade.login("user", "password");
+        assertNotNull(response, "Response should not be null");
+        assertTrue(response.contains("authToken"), "Response should contain 'authToken'");
     }
 
     @Test
-    public void loginInvalidPassword() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "");
-        Assertions.assertThrows(ResponseException.class, () -> {
-            var loginResponse = serverFacade.login(loginRequest);
+    public void testLoginFail() {
+        assertThrows(IOException.class, () -> {
+            facade.login("bad", "bad");
         });
     }
 
     @Test
-    public void createGameSuccess() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
+    public void testLogoutPass() throws IOException {
+        facade.register("logoutUser", "password123", "logoutuser@example.com");
+        String loginResponse = facade.login("logoutUser", "password123");
 
-        var createRequest = new CreateGameRequest(loginResponse.authToken(), "myGame");
-        var createResponse = serverFacade.create(createRequest);
+        JsonObject jsonObject = JsonParser.parseString(loginResponse).getAsJsonObject();
+        String authToken = jsonObject.get("authToken").getAsString();
 
-        Assertions.assertTrue(createResponse.gameID() >= 0);
-
-        serverFacade.logout(new LogoutRequest(loginResponse.authToken()));
+        assertDoesNotThrow(() -> facade.logout(authToken));
     }
 
     @Test
-    public void createGameEmptyGameName() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
-
-        var createRequest = new CreateGameRequest(loginResponse.authToken(), "");
-
-        Assertions.assertThrows(ResponseException.class, () -> {
-            var createResponse = serverFacade.create(createRequest);
-        });
-        serverFacade.logout(new LogoutRequest(loginResponse.authToken()));
-    }
-
-    @Test
-    public void listGameSuccess() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
-
-        GetGamesRequest listRequest = new GetGamesRequest(loginResponse.authToken());
-
-        GetGamesResponse listResponse = serverFacade.list(listRequest);
-
-        Assertions.assertTrue(!listResponse.games().isEmpty());
-
-    }
-
-    @Test
-    public void listGameInvalidAuth() throws ResponseException {
-        Assertions.assertThrows(ResponseException.class, () -> {
-            GetGamesRequest listRequest = new GetGamesRequest("invalidAuth");
-
-            GetGamesResponse listResponse = serverFacade.list(listRequest);
+    public void testLogoutFail() {
+        assertThrows(IOException.class, () -> {
+            facade.logout("invalidToken");
         });
     }
 
     @Test
-    public void logoutSuccess() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
+    public void testCreateGamePass() throws IOException {
+        facade.register("gameUser", "password123", "gameuser@example.com");
+        String loginResponse = facade.login("gameUser", "password123");
 
-        var logoutRequest = new LogoutRequest(loginResponse.authToken());
-        LogoutResponse logoutResponse = serverFacade.logout(logoutRequest);
+        JsonObject jsonObject = JsonParser.parseString(loginResponse).getAsJsonObject();
+        String authToken = jsonObject.get("authToken").getAsString();
 
-        Assertions.assertTrue(logoutResponse != null);
+        String response = facade.createGame(authToken, "TestGame");
+        assertNotNull(response);
+        assertTrue(response.contains("gameID"));
     }
 
     @Test
-    public void logoutInvalidAuth() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
-
-        var logoutRequest = new LogoutRequest("invalidAuth");
-
-        Assertions.assertThrows(ResponseException.class, () -> {
-            LogoutResponse logoutResponse = serverFacade.logout(logoutRequest);
+    public void testCreateGameFail() {
+        assertThrows(IOException.class, () -> {
+            facade.createGame("invalidToken", "TestGame");
         });
     }
 
     @Test
-    public void joinGameSuccess() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
+    public void testListGamePass() throws IOException {
+        facade.register("listUser", "password123", "listuser@example.com");
+        String loginResponse = facade.login("listUser", "password123");
 
+        JsonObject jsonObject = JsonParser.parseString(loginResponse).getAsJsonObject();
+        String authToken = jsonObject.get("authToken").getAsString();
 
-        GetGamesRequest listRequest = new GetGamesRequest(loginResponse.authToken());
-        GetGamesResponse listResponse = serverFacade.list(listRequest);
+        facade.createGame(authToken, "TestGame");
 
-        JoinGameRequest joinGameRequest = new JoinGameRequest(loginResponse.authToken(), ChessGame.TeamColor.WHITE, 1);
-        JoinGameResponse joinGameResponse = serverFacade.join(joinGameRequest);
-
-        Assertions.assertNotNull(joinGameResponse);
+        String listResponse = facade.listGames(authToken);
+        assertNotNull(listResponse);
+        assertTrue(listResponse.contains("TestGame"));
     }
 
     @Test
-    public void joinGameInvalidGameNum() throws ResponseException {
-        var loginRequest = new LoginRequest("pat", "ree");
-        var loginResponse = serverFacade.login(loginRequest);
-
-
-        GetGamesRequest listRequest = new GetGamesRequest(loginResponse.authToken());
-        GetGamesResponse listResponse = serverFacade.list(listRequest);
-
-        JoinGameRequest joinGameRequest = new JoinGameRequest(loginResponse.authToken(), ChessGame.TeamColor.WHITE, 50);
-
-        Assertions.assertThrows(ResponseException.class, () -> {
-            JoinGameResponse joinGameResponse = serverFacade.join(joinGameRequest);
+    public void testListGamesFail() {
+        assertThrows(IOException.class, () -> {
+            facade.listGames("invalidToken");
         });
     }
 
+    @Test
+    public void testJoinGamePass() throws IOException {
+        facade.register("joinUser", "password123", "joinuser@example.com");
+        String loginResponse = facade.login("joinUser", "password123");
 
+        JsonObject jsonObject = JsonParser.parseString(loginResponse).getAsJsonObject();
+        String authToken = jsonObject.get("authToken").getAsString();
+
+        String gameResponse = facade.createGame(authToken, "TestGame");
+        JsonObject gameJson = JsonParser.parseString(gameResponse).getAsJsonObject();
+        int gameId = gameJson.get("gameID").getAsInt();
+
+        String joinResponse = facade.joinGame(authToken, gameId, "WHITE");
+        assertNotNull(joinResponse);
+    }
+
+    @Test
+    public void testJoinGameFail() {
+        assertThrows(IOException.class, () -> {
+            facade.joinGame("invalidToken", 99999, "WHITE");
+        });
+    }
 }
+
+

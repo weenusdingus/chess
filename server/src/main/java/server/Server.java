@@ -33,6 +33,9 @@ public class Server {
         gameService = new GameService(dataaccess);
         clearService = new ClearService(dataaccess);
     }
+    public int getPort() {
+        return Spark.port();
+    }
 
     public int run(int desiredPort){
         Spark.port(desiredPort);
