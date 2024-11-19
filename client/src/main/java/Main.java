@@ -57,8 +57,8 @@ public class Main {
                 case "list" -> listGames();
                 case "join" -> joinGame();
                 case "redraw" -> redrawChessBoard();
+                case "observe" -> observeGame();
                 case "quit" -> {
-                    System.out.println("Goodbye!");
                     return;
                 }
                 default -> System.out.println("Unknown command. Type 'help' for available commands.");
@@ -78,6 +78,7 @@ public class Main {
         System.out.println("  create <name> - a game");
         System.out.println("  list - games");
         System.out.println("  join - join a game");
+        System.out.println("  observe - a game");
         System.out.println("  logout - when you are done");
         System.out.println("  quit - playing chess");
         System.out.println("help - with possible commands");
@@ -187,6 +188,8 @@ public class Main {
 
             System.out.println("\nGames:");
             System.out.println("----------------");
+
+            int index = 1;
             for (JsonElement gameElement : games) {
                 JsonObject game = gameElement.getAsJsonObject();
                 String gameName = game.get("gameName").getAsString();
@@ -194,12 +197,13 @@ public class Main {
                 String blackPlayer = game.has("blackUsername") ? game.get("blackUsername").getAsString() : "<EMPTY>";
                 int gameId = game.get("gameID").getAsInt();
 
-                NAME_TO_ID.put(gameName, gameId);
+                NAME_TO_ID.put(String.valueOf(index), gameId);
 
-                System.out.printf("Game: %s\n", gameName);
+                System.out.printf("%d. %s\n", index, gameName);
                 System.out.printf("  White Player: %s\n", whitePlayer);
                 System.out.printf("  Black Player: %s\n", blackPlayer);
                 System.out.println();
+                index++;
             }
         } catch (IOException e) {
             System.out.println("Something went wrong");
@@ -212,40 +216,62 @@ public class Main {
         try {
             listGames();
 
-            System.out.print("Enter game name: ");
-            String gameName = SCANNER.nextLine().trim();
-            System.out.print("Valid entries: 'white', 'black', enter (to observe)\n");
+            System.out.print("Enter game number: ");
+            String gameNumber = SCANNER.nextLine().trim();
+            System.out.print("Valid entries: 'white', 'black'\n");
             System.out.print("Enter color: ");
             String color = SCANNER.nextLine().trim().toUpperCase();
 
-            if (gameName.isEmpty()) {
+            if (gameNumber.isEmpty()) {
                 System.out.println("Invalid entry");
                 return;
             }
 
-            Integer gameId = NAME_TO_ID.get(gameName);
+            Integer gameId = NAME_TO_ID.get(gameNumber);
             if (gameId == null) {
                 System.out.println("Game not found");
                 return;
             }
 
-            if (!color.isEmpty() && !color.equals("WHITE") && !color.equals("BLACK")) {
+            if (color.isEmpty() || (!color.equals("WHITE") && !color.equals("BLACK"))) {
                 System.out.println("Invalid entry");
                 return;
             }
 
             SERVER_FACADE.joinGame(authToken, gameId, color);
-
-            if (color.isEmpty()) {
-                System.out.printf("Observing game '%s'.\n", gameName);
-                displayChessBoard(null);
-            } else {
-                System.out.printf("Joined game '%s' as %s.\n", gameName, color);
-                displayChessBoard(color);
-            }
+            System.out.printf("Joined game #%s as %s.\n", gameNumber, color);
+            displayChessBoard(color);
 
         } catch (IOException e) {
             System.out.println("Unable to join game.");
+        } catch (Exception e) {
+            System.out.println("Something went wrong");
+        }
+    }
+    private static void observeGame() {
+        try {
+            listGames();
+
+            System.out.print("Enter game number: ");
+            String gameNumber = SCANNER.nextLine().trim();
+
+            if (gameNumber.isEmpty()) {
+                System.out.println("Invalid entry");
+                return;
+            }
+
+            Integer gameId = NAME_TO_ID.get(gameNumber);
+            if (gameId == null) {
+                System.out.println("Game not found");
+                return;
+            }
+
+            SERVER_FACADE.joinGame(authToken, gameId, null);
+            System.out.printf("Observing game #%s.\n", gameNumber);
+            displayChessBoard(null);
+
+        } catch (IOException e) {
+            System.out.println("Unable to observe game.");
         } catch (Exception e) {
             System.out.println("Something went wrong");
         }
@@ -263,9 +289,9 @@ public class Main {
                 }
 
             }
-            //default black for now if observing
+            //default white for now if observing
             else {
-                board.displayBlackPerspective();
+                board.displayWhitePerspective();
             }
 
         } catch (Exception e) {
