@@ -42,7 +42,6 @@ public class Main {
                 case "register" -> register();
                 case "login" -> login();
                 case "quit" -> {
-                    System.out.println("Goodbye!");
                     return;
                 }
                 default -> System.out.println("Unknown command. Type 'help' for available commands.");
@@ -220,7 +219,7 @@ public class Main {
 
             System.out.print("Enter game name: ");
             String gameName = scanner.nextLine().trim();
-            System.out.print("Valid entries: 'white', 'black', enter (to observe)");
+            System.out.print("Valid entries: 'white', 'black', enter (to observe)\n");
             System.out.print("Enter color: ");
             String color = scanner.nextLine().trim().toUpperCase();
 
@@ -259,13 +258,9 @@ public class Main {
 
     private static void displayChessBoard(String playerColor) {
         try {
-            Scanner userInput = new Scanner(System.in);
             ChessBoard board = new ChessBoard();
 
             if (playerColor != null) {
-                System.out.println("\nPress Enter to see the board (" + playerColor + ")...");
-                userInput.nextLine();
-
                 if (playerColor.equals("BLACK")) {
                     board.displayBlackPerspective();
                 } else {
@@ -273,18 +268,13 @@ public class Main {
                 }
 
             }
+            //default black for now if observing
             else {
-                System.out.println("\nPress Enter to see the board");
-                userInput.nextLine();
                 board.displayBlackPerspective();
-
-                System.out.println("\nPress Enter to change perspectives");
-                userInput.nextLine();
-                board.displayWhitePerspective();
             }
 
         } catch (Exception e) {
-            System.out.println("Error displaying chess board");
+            System.out.println("Error");
         }
     }
 
@@ -295,13 +285,10 @@ public class Main {
 
             board.displayBlackPerspective();
 
-            System.out.println("\nPress Enter to see White's perspective...");
-            userInput.nextLine();
-
-            board.displayWhitePerspective();
+            //IMPLEMENT REDRAWING CORRECT PERSPECTIVE
 
         } catch (Exception e) {
-            System.out.println("Error displaying chess board. Press Enter to continue.");
+            System.out.println("Error");
         }
     }
 }

@@ -33,31 +33,44 @@ public class ChessBoard {
   }
 
   public void displayBlackPerspective() {
-    System.out.println("\nBlack's perspective:");
-    printBoard(false);
-  }
-
-  public void displayWhitePerspective() {
-    System.out.println("\nWhite's perspective:");
     printBoard(true);
   }
 
-  private void printBoard(boolean whitePerspective) {
-    String[][] displayBoard = copyBoard();
-    if (!whitePerspective) {
-      reverseBoard(displayBoard);
+  public void displayWhitePerspective() {
+    printBoard(false);
+  }
+
+  private void printBoard(boolean blackPerspective) {
+    String[][] displayBoard = blackPerspective ? reversePieces(copyBoard()) : copyBoard();
+    String columnLabels = blackPerspective ? "HGFEDCBA" : "ABCDEFGH";
+
+    System.out.print("    ");
+    for (char col : columnLabels.toCharArray()) {
+      System.out.print(" " + col + " ");
     }
+    System.out.println();
 
     for (int i = 0; i < displayBoard.length; i++) {
+      int rowLabel = blackPerspective ? i + 1 : 8 - i;
+      System.out.print(rowLabel + " ");
+
       for (int j = 0; j < displayBoard[i].length; j++) {
         if ((i + j) % 2 == 0) {
-          System.out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY + displayBoard[i][j] + EscapeSequences.RESET_BG_COLOR);
+          System.out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREEN + displayBoard[i][j] + EscapeSequences.RESET_BG_COLOR);
         } else {
-          System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY + displayBoard[i][j] + EscapeSequences.RESET_BG_COLOR);
+          System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREEN + displayBoard[i][j] + EscapeSequences.RESET_BG_COLOR);
         }
       }
+
+      System.out.print(" " + rowLabel);
       System.out.println();
     }
+
+    System.out.print("   ");
+    for (char col : columnLabels.toCharArray()) {
+      System.out.print(" " + col + " ");
+    }
+    System.out.println();
   }
 
   private String[][] copyBoard() {
@@ -68,21 +81,13 @@ public class ChessBoard {
     return copy;
   }
 
-  private void reverseBoard(String[][] board) {
-    // Reverse rows
-    for (int i = 0; i < board.length / 2; i++) {
-      String[] temp = board[i];
-      board[i] = board[board.length - 1 - i];
-      board[board.length - 1 - i] = temp;
+  private String[][] reversePieces(String[][] board) {
+    String[][] reversed = new String[board.length][];
+    for (int i = 0; i < board.length; i++) {
+      reversed[i] = board[board.length - 1 - i];
     }
-    // Reverse columns
-    for (String[] row : board) {
-      for (int j = 0; j < row.length / 2; j++) {
-        String temp = row[j];
-        row[j] = row[row.length - 1 - j];
-        row[row.length - 1 - j] = temp;
-      }
-    }
+    return reversed;
   }
 }
+
 
