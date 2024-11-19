@@ -42,12 +42,9 @@ public class ChessBoard {
 
   private void printBoard(boolean blackPerspective) {
     String[][] displayBoard = blackPerspective ? reversePieces(copyBoard()) : copyBoard();
-    String columnLabels = blackPerspective ? "HGFEDCBA" : "ABCDEFGH";
+    String columnLabels = blackPerspective ? "  H   G   F   E   D   C   B   A" : "  A   B   C   D   E   F   G   H";
 
-    System.out.print("    ");
-    for (char col : columnLabels.toCharArray()) {
-      System.out.print(" " + col + " ");
-    }
+    System.out.print(columnLabels);
     System.out.println();
 
     for (int i = 0; i < displayBoard.length; i++) {
@@ -66,10 +63,7 @@ public class ChessBoard {
       System.out.println();
     }
 
-    System.out.print("   ");
-    for (char col : columnLabels.toCharArray()) {
-      System.out.print(" " + col + " ");
-    }
+    System.out.print(columnLabels);
     System.out.println();
   }
 
@@ -82,9 +76,12 @@ public class ChessBoard {
   }
 
   private String[][] reversePieces(String[][] board) {
-    String[][] reversed = new String[board.length][];
+    String[][] reversed = new String[board.length][board[0].length];
     for (int i = 0; i < board.length; i++) {
-      reversed[i] = board[board.length - 1 - i];
+      for (int j = 0; j < board[i].length; j++) {
+        // Flip both rows and columns
+        reversed[i][j] = board[board.length - 1 - i][board[i].length - 1 - j];
+      }
     }
     return reversed;
   }

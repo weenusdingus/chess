@@ -97,7 +97,7 @@ public class Main {
 
             String response = SERVER_FACADE.login(username, password);
             authToken = extractAuthToken(response);
-            System.out.println("Welcome back, " + username + "!");
+            System.out.println("Welcome " + username + "!");
         } catch (IOException e) {
             System.out.println("Invalid username or password.");
         } catch (Exception e) {
