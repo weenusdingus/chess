@@ -11,16 +11,11 @@ import java.util.*;
 
 public class Main {
 
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final ServerFacade serverFacade = new ServerFacade("http://localhost:8080");
+    private static final Scanner SCANNER = new Scanner(System.in);
+    private static final ServerFacade SERVER_FACADE= new ServerFacade("http://localhost:8080");
     private static String authToken = null;
-    private static final Gson gson = new Gson();
-    private static final Map<Integer, Integer> displayNumberToGameId = new HashMap<>();
-    private static final int currentDisplayNumber = 1;
-    private static final Map<String, Integer> gameNameToId = new HashMap<>();
-
-
-
+    private static final Gson GSON = new Gson();
+    private static final Map<String, Integer> NAME_TO_ID= new HashMap<>();
 
     public static void main(String[] args) {
         System.out.println("♕ Welcome to 240 Chess! Type 'help' to get started ♕");
@@ -28,14 +23,14 @@ public class Main {
     }
 
     private static String extractAuthToken(String jsonString) {
-        JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
+        JsonObject jsonObject = GSON.fromJson(jsonString, JsonObject.class);
         return jsonObject.get("authToken").getAsString();
     }
 
     private static void preLoginUI() {
         while (authToken == null) {
             System.out.print("[LOGGED_OUT] >>> ");
-            String command = scanner.nextLine().trim().toLowerCase();
+            String command = SCANNER.nextLine().trim().toLowerCase();
 
             switch (command) {
                 case "help" -> displayPreLoginHelp();
@@ -53,7 +48,7 @@ public class Main {
     private static void postLoginUI() {
         while (authToken != null) {
             System.out.print("[LOGGED_IN] >>> ");
-            String command = scanner.nextLine().trim().toLowerCase();
+            String command = SCANNER.nextLine().trim().toLowerCase();
 
             switch (command) {
                 case "help" -> displayPostLoginHelp();
@@ -91,16 +86,16 @@ public class Main {
     private static void login() {
         try {
             System.out.print("Enter username: ");
-            String username = scanner.nextLine().trim();
+            String username = SCANNER.nextLine().trim();
             System.out.print("Enter password: ");
-            String password = scanner.nextLine().trim();
+            String password = SCANNER.nextLine().trim();
 
             if (username.isEmpty() || password.isEmpty()) {
                 System.out.println("Invalid entry");
                 return;
             }
 
-            String response = serverFacade.login(username, password);
+            String response = SERVER_FACADE.login(username, password);
             authToken = extractAuthToken(response);
             System.out.println("Welcome back, " + username + "!");
         } catch (IOException e) {
@@ -114,18 +109,18 @@ public class Main {
     private static void register() {
         try {
             System.out.print("Enter username: ");
-            String username = scanner.nextLine().trim();
+            String username = SCANNER.nextLine().trim();
             System.out.print("Enter password: ");
-            String password = scanner.nextLine().trim();
+            String password = SCANNER.nextLine().trim();
             System.out.print("Enter email: ");
-            String email = scanner.nextLine().trim();
+            String email = SCANNER.nextLine().trim();
 
             if (username.isEmpty() || password.isEmpty() || email.isEmpty()) {
                 System.out.println("Invalid entry");
                 return;
             }
 
-            String response = serverFacade.register(username, password, email);
+            String response = SERVER_FACADE.register(username, password, email);
             authToken = extractAuthToken(response);
             System.out.println("Welcome back, " + username + "!");
         } catch (IOException e) {
@@ -137,7 +132,7 @@ public class Main {
 
     private static void logout() {
         try {
-            serverFacade.logout(authToken);
+            SERVER_FACADE.logout(authToken);
             authToken = null;
         } catch (IOException e) {
             System.out.println("Something went wrong");
@@ -149,15 +144,15 @@ public class Main {
     private static void createGame() {
         try {
             System.out.print("Enter game name: ");
-            String gameName = scanner.nextLine().trim();
+            String gameName = SCANNER.nextLine().trim();
 
             if (gameName.isEmpty()) {
                 System.out.println("Invalid Entry");
                 return;
             }
 
-            String gamesJson = serverFacade.listGames(authToken);
-            JsonObject gamesObject = gson.fromJson(gamesJson, JsonObject.class);
+            String gamesJson = SERVER_FACADE.listGames(authToken);
+            JsonObject gamesObject = GSON.fromJson(gamesJson, JsonObject.class);
             JsonArray games = gamesObject.getAsJsonArray("games");
 
             for (JsonElement gameElement : games) {
@@ -168,7 +163,7 @@ public class Main {
                 }
             }
 
-            serverFacade.createGame(authToken, gameName);
+            SERVER_FACADE.createGame(authToken, gameName);
             System.out.println("Game '" + gameName + "' created successfully.");
         } catch (IOException e) {
             System.out.println("Unable to create game. Please try again.");
@@ -179,8 +174,8 @@ public class Main {
 
     private static void listGames() {
         try {
-            String gamesJson = serverFacade.listGames(authToken);
-            JsonObject gamesObject = gson.fromJson(gamesJson, JsonObject.class);
+            String gamesJson = SERVER_FACADE.listGames(authToken);
+            JsonObject gamesObject = GSON.fromJson(gamesJson, JsonObject.class);
             JsonArray games = gamesObject.getAsJsonArray("games");
 
             if (games.isEmpty()) {
@@ -188,7 +183,7 @@ public class Main {
                 return;
             }
 
-            gameNameToId.clear();
+            NAME_TO_ID.clear();
 
             System.out.println("\nGames:");
             System.out.println("----------------");
@@ -199,7 +194,7 @@ public class Main {
                 String blackPlayer = game.has("blackUsername") ? game.get("blackUsername").getAsString() : "<EMPTY>";
                 int gameId = game.get("gameID").getAsInt();
 
-                gameNameToId.put(gameName, gameId);
+                NAME_TO_ID.put(gameName, gameId);
 
                 System.out.printf("Game: %s\n", gameName);
                 System.out.printf("  White Player: %s\n", whitePlayer);
@@ -218,17 +213,17 @@ public class Main {
             listGames();
 
             System.out.print("Enter game name: ");
-            String gameName = scanner.nextLine().trim();
+            String gameName = SCANNER.nextLine().trim();
             System.out.print("Valid entries: 'white', 'black', enter (to observe)\n");
             System.out.print("Enter color: ");
-            String color = scanner.nextLine().trim().toUpperCase();
+            String color = SCANNER.nextLine().trim().toUpperCase();
 
             if (gameName.isEmpty()) {
                 System.out.println("Invalid entry");
                 return;
             }
 
-            Integer gameId = gameNameToId.get(gameName);
+            Integer gameId = NAME_TO_ID.get(gameName);
             if (gameId == null) {
                 System.out.println("Game not found");
                 return;
@@ -239,7 +234,7 @@ public class Main {
                 return;
             }
 
-            serverFacade.joinGame(authToken, gameId, color);
+            SERVER_FACADE.joinGame(authToken, gameId, color);
 
             if (color.isEmpty()) {
                 System.out.printf("Observing game '%s'.\n", gameName);
