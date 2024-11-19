@@ -21,6 +21,7 @@ public class Main {
 
 
 
+
     public static void main(String[] args) {
         System.out.println("♕ Welcome to 240 Chess! Type 'help' to get started ♕");
         preLoginUI();
@@ -61,7 +62,7 @@ public class Main {
                 case "create" -> createGame();
                 case "list" -> listGames();
                 case "join" -> joinGame();
-                case "observe" -> displayChessBoard();
+                case "redraw" -> redrawChessBoard();
                 case "quit" -> {
                     System.out.println("Goodbye!");
                     return;
@@ -152,16 +153,14 @@ public class Main {
             String gameName = scanner.nextLine().trim();
 
             if (gameName.isEmpty()) {
-                System.out.println("Game name cannot be empty.");
+                System.out.println("Invalid Entry");
                 return;
             }
 
-            // Check existing games for duplicate names
             String gamesJson = serverFacade.listGames(authToken);
             JsonObject gamesObject = gson.fromJson(gamesJson, JsonObject.class);
             JsonArray games = gamesObject.getAsJsonArray("games");
 
-            // Check for duplicate game names
             for (JsonElement gameElement : games) {
                 JsonObject game = gameElement.getAsJsonObject();
                 if (game.get("gameName").getAsString().equals(gameName)) {
@@ -170,7 +169,6 @@ public class Main {
                 }
             }
 
-            // If no duplicates found, create the game
             serverFacade.createGame(authToken, gameName);
             System.out.println("Game '" + gameName + "' created successfully.");
         } catch (IOException e) {
@@ -186,15 +184,14 @@ public class Main {
             JsonObject gamesObject = gson.fromJson(gamesJson, JsonObject.class);
             JsonArray games = gamesObject.getAsJsonArray("games");
 
-            if (games.size() == 0) {
+            if (games.isEmpty()) {
                 System.out.println("No games available.");
                 return;
             }
 
-            // Clear previous mapping
             gameNameToId.clear();
 
-            System.out.println("\nAvailable Games:");
+            System.out.println("\nGames:");
             System.out.println("----------------");
             for (JsonElement gameElement : games) {
                 JsonObject game = gameElement.getAsJsonObject();
@@ -203,7 +200,6 @@ public class Main {
                 String blackPlayer = game.has("blackUsername") ? game.get("blackUsername").getAsString() : "<EMPTY>";
                 int gameId = game.get("gameID").getAsInt();
 
-                // Store the mapping
                 gameNameToId.put(gameName, gameId);
 
                 System.out.printf("Game: %s\n", gameName);
@@ -212,37 +208,35 @@ public class Main {
                 System.out.println();
             }
         } catch (IOException e) {
-            System.out.println("Unable to retrieve games. Please try again.");
+            System.out.println("Something went wrong");
         } catch (Exception e) {
-            System.out.println("An error occurred. Please try again.");
+            System.out.println("An error occurred");
         }
     }
 
     private static void joinGame() {
         try {
-            // First list the games so user can see available games
             listGames();
 
             System.out.print("Enter game name: ");
             String gameName = scanner.nextLine().trim();
-            System.out.print("Enter color (WHITE/BLACK/empty to observe): ");
+            System.out.print("Valid entries: 'white', 'black', enter (to observe)");
+            System.out.print("Enter color: ");
             String color = scanner.nextLine().trim().toUpperCase();
 
-            // Input validation
             if (gameName.isEmpty()) {
-                System.out.println("Game name cannot be empty.");
+                System.out.println("Invalid entry");
                 return;
             }
 
-            // Get the game ID from our mapping
             Integer gameId = gameNameToId.get(gameName);
             if (gameId == null) {
-                System.out.println("Game not found. Please enter an existing game name from the list.");
+                System.out.println("Game not found");
                 return;
             }
 
             if (!color.isEmpty() && !color.equals("WHITE") && !color.equals("BLACK")) {
-                System.out.println("Invalid color. Please enter WHITE, BLACK, or leave empty to observe.");
+                System.out.println("Invalid entry");
                 return;
             }
 
@@ -250,16 +244,16 @@ public class Main {
 
             if (color.isEmpty()) {
                 System.out.printf("Observing game '%s'.\n", gameName);
-                displayChessBoard(null); // Pass null to indicate observer
+                displayChessBoard(null);
             } else {
                 System.out.printf("Joined game '%s' as %s.\n", gameName, color);
-                displayChessBoard(color); // Pass the color to show proper perspective first
+                displayChessBoard(color);
             }
 
         } catch (IOException e) {
-            System.out.println("Unable to join game. Please verify the game name and try again.");
+            System.out.println("Unable to join game.");
         } catch (Exception e) {
-            System.out.println("An error occurred. Please try again.");
+            System.out.println("Something went wrong");
         }
     }
 
@@ -268,59 +262,42 @@ public class Main {
             Scanner userInput = new Scanner(System.in);
             ChessBoard board = new ChessBoard();
 
-            // If player is playing (not observing)
             if (playerColor != null) {
-                System.out.println("\nPress Enter to see the board from your perspective (" + playerColor + ")...");
+                System.out.println("\nPress Enter to see the board (" + playerColor + ")...");
                 userInput.nextLine();
 
-                // Show player's perspective first
                 if (playerColor.equals("BLACK")) {
                     board.displayBlackPerspective();
                 } else {
                     board.displayWhitePerspective();
                 }
 
-                // Then show the opposite perspective
-                System.out.println("\nPress Enter to see the opposite perspective...");
-                userInput.nextLine();
-
-                if (playerColor.equals("BLACK")) {
-                    board.displayWhitePerspective();
-                } else {
-                    board.displayBlackPerspective();
-                }
             }
-            // If player is observing
             else {
-                System.out.println("\nPress Enter to see Black's perspective...");
+                System.out.println("\nPress Enter to see the board");
                 userInput.nextLine();
                 board.displayBlackPerspective();
 
-                System.out.println("\nPress Enter to see White's perspective...");
+                System.out.println("\nPress Enter to change perspectives");
                 userInput.nextLine();
                 board.displayWhitePerspective();
             }
 
         } catch (Exception e) {
-            System.out.println("Error displaying chess board. Press Enter to continue.");
+            System.out.println("Error displaying chess board");
         }
     }
 
-    private static void displayChessBoard() {
+    private static void redrawChessBoard() {
         try {
             Scanner userInput = new Scanner(System.in);
             ChessBoard board = new ChessBoard();
 
-            System.out.println("\nPress Enter to see the board...");
-            userInput.nextLine();
-
-            // Show Black's perspective first
             board.displayBlackPerspective();
 
             System.out.println("\nPress Enter to see White's perspective...");
             userInput.nextLine();
 
-            // Show White's perspective
             board.displayWhitePerspective();
 
         } catch (Exception e) {
