@@ -1,4 +1,4 @@
 package response;
 
-public record CreateGameResponse() {
+public record CreateGameResponse(Integer gameID) {
 }
