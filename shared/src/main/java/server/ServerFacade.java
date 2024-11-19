@@ -9,7 +9,8 @@ import java.util.HashMap;
 
 import exception.ResponseException;
 import model.*;
-import protocol.*;
+import response.*;
+import request.*;
 
 public class ServerFacade {
   private final String serverUrl;
@@ -38,10 +39,10 @@ public class ServerFacade {
     var path = "/game";
     var games = this.makeRequest("GET", path, null, getGamesRequest.authToken(), GetGamesResponse.class);
 
-    ArrayList<Game> gamesList = (ArrayList<Game>) games.games();
+    ArrayList<GameData> gamesList = (ArrayList<GameData>) games.games();
     gameIDMap.clear();
     for (int i=0; i < gamesList.size(); i++) {
-      Game game = gamesList.get(i);
+      GameData game = gamesList.get(i);
       gameIDMap.put(i+1, game.gameID());
     }
     return games;
@@ -76,7 +77,7 @@ public class ServerFacade {
       throwIfNotSuccessful(http);
       return readBody(http, responseClass);
     } catch (Exception ex) {
-      throw new ResponseException(500, ex.getMessage());
+      throw new ResponseException(ex.getMessage());
     }
   }
 
@@ -93,7 +94,7 @@ public class ServerFacade {
   private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, ResponseException {
     var status = http.getResponseCode();
     if (!isSuccessful(status)) {
-      throw new ResponseException(status, "" + status);
+      throw new ResponseException("" + status);
     }
   }
 
