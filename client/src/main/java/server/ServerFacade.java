@@ -1,118 +1,133 @@
 package server;
 
 import com.google.gson.Gson;
-
 import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import exception.ResponseException;
-import model.*;
-import response.*;
-import request.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
 
 public class ServerFacade {
   private final String serverUrl;
-  private HashMap<Integer, Integer> gameIDMap = new HashMap<>();
+  private final Gson gson = new Gson();
 
   public ServerFacade(String serverUrl) {
     this.serverUrl = serverUrl;
   }
 
-  public RegisterResponse register(RegisterRequest registerRequest) throws ResponseException {
-    var path = "/user";
-    return this.makeRequest("POST", path, registerRequest, null, RegisterResponse.class);
-  }
-
-  public LoginResponse login(LoginRequest loginRequest) throws ResponseException {
-    var path = "/session";
-    return this.makeRequest("POST", path, loginRequest, null, LoginResponse.class);
-  }
-
-  public CreateGameResponse create(CreateGameRequest createRequest) throws ResponseException {
-    var path = "/game";
-    return this.makeRequest("POST", path, createRequest, createRequest.authToken(), CreateGameResponse.class);
-  }
-
-  public GetGamesResponse list(GetGamesRequest getGamesRequest) throws ResponseException {
-    var path = "/game";
-    var games = this.makeRequest("GET", path, null, getGamesRequest.authToken(), GetGamesResponse.class);
-
-    ArrayList<GameData> gamesList = (ArrayList<GameData>) games.games();
-    gameIDMap.clear();
-    for (int i=0; i < gamesList.size(); i++) {
-      GameData game = gamesList.get(i);
-      gameIDMap.put(i+1, game.gameID());
+  public String register(String username, String password, String email) throws IOException {
+    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+      throw new IOException("Invalid registration data");
     }
-    return games;
-  }
 
-  public JoinGameResponse join(JoinGameRequest joinGameRequest) throws ResponseException {
-    var path = "/game";
-    var joinGameRequestFix = new JoinGameRequest(joinGameRequest.authToken(),
-            joinGameRequest.playerColor(), gameIDMap.get(joinGameRequest.gameID()));
-    return this.makeRequest("PUT", path, joinGameRequestFix, joinGameRequestFix.authToken(), JoinGameResponse.class);
-  }
+    URL url = new URL(serverUrl + "/user");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("POST");
+    conn.setRequestProperty("Content-Type", "application/json");
+    conn.setDoOutput(true);
 
-  public LogoutResponse logout(LogoutRequest logoutRequest) throws ResponseException {
-    var path = "/session";
-    return this.makeRequest("DELETE", path, null, logoutRequest.authToken(), LogoutResponse.class);
-  }
+    String requestBody = String.format("{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"%s\"}",
+            username, password, email);
+    try (OutputStream os = conn.getOutputStream()) {
+      os.write(requestBody.getBytes());
+    }
 
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Registration failed with response code: " + conn.getResponseCode());
+    }
 
-  private <T> T makeRequest(String method, String path, Object requestBody, String requestHeader, Class<T> responseClass) throws ResponseException {
-    try {
-      URL url = (new URI(serverUrl + path)).toURL();
-      HttpURLConnection http = (HttpURLConnection) url.openConnection();
-      http.setRequestMethod(method);
-      http.setDoOutput(true);
-
-      if (requestHeader != null) {
-        http.setRequestProperty("Authorization", requestHeader);
-      }
-
-      writeBody(requestBody, http);
-      http.connect();
-      throwIfNotSuccessful(http);
-      return readBody(http, responseClass);
-    } catch (Exception ex) {
-      throw new ResponseException(ex.getMessage());
+    try (Scanner scanner = new Scanner(conn.getInputStream()).useDelimiter("\\A")) {
+      return scanner.hasNext() ? scanner.next() : "";
     }
   }
 
-  private static void writeBody(Object request, HttpURLConnection http) throws IOException {
-    if (request != null) {
-      http.addRequestProperty("Content-Type", "application/json");
-      String reqData = new Gson().toJson(request);
-      try (OutputStream reqBody = http.getOutputStream()) {
-        reqBody.write(reqData.getBytes());
-      }
+  public String login(String username, String password) throws IOException {
+    URL url = new URL(serverUrl + "/session");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("POST");
+    conn.setRequestProperty("Content-Type", "application/json");
+    conn.setDoOutput(true);
+
+    String requestBody = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+    try (OutputStream os = conn.getOutputStream()) {
+      os.write(requestBody.getBytes());
+    }
+
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Login failed with response code: " + conn.getResponseCode());
+    }
+
+    try (Scanner scanner = new Scanner(conn.getInputStream()).useDelimiter("\\A")) {
+      return scanner.hasNext() ? scanner.next() : "";
     }
   }
 
-  private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, ResponseException {
-    var status = http.getResponseCode();
-    if (!isSuccessful(status)) {
-      throw new ResponseException("" + status);
+  public void logout(String authToken) throws IOException {
+    URL url = new URL(serverUrl + "/session");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("DELETE");
+    conn.setRequestProperty("Authorization", authToken);
+
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Logout failed with response code: " + conn.getResponseCode());
     }
   }
 
-  private static <T> T readBody(HttpURLConnection http, Class<T> responseClass) throws IOException {
-    T response = null;
-    if (http.getContentLength() < 0) {
-      try (InputStream respBody = http.getInputStream()) {
-        InputStreamReader reader = new InputStreamReader(respBody);
-        if (responseClass != null) {
-          response = new Gson().fromJson(reader, responseClass);
-        }
-      }
+  public String createGame(String authToken, String gameName) throws IOException {
+    URL url = new URL(serverUrl + "/game");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("POST");
+    conn.setRequestProperty("Authorization", authToken);
+    conn.setRequestProperty("Content-Type", "application/json");
+    conn.setDoOutput(true);
+
+    String jsonInputString = "{\"gameName\":\"" + gameName + "\"}";
+    try (OutputStream os = conn.getOutputStream()) {
+      os.write(jsonInputString.getBytes());
     }
-    return response;
+
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Game creation failed with response code: " + conn.getResponseCode());
+    }
+
+    try (Scanner scanner = new Scanner(conn.getInputStream()).useDelimiter("\\A")) {
+      return scanner.hasNext() ? scanner.next() : "";
+    }
   }
 
+  public String listGames(String authToken) throws IOException {
+    URL url = new URL(serverUrl + "/game");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("GET");
+    conn.setRequestProperty("Authorization", authToken);
 
-  private boolean isSuccessful(int status) {
-    return status / 100 == 2;
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Listing games failed with response code: " + conn.getResponseCode());
+    }
+
+    try (Scanner scanner = new Scanner(conn.getInputStream()).useDelimiter("\\A")) {
+      return scanner.hasNext() ? scanner.next() : "";
+    }
+  }
+
+  public String joinGame(String authToken, int gameId, String color) throws IOException {
+    URL url = new URL(serverUrl + "/game");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("PUT");
+    conn.setRequestProperty("Authorization", authToken);
+    conn.setRequestProperty("Content-Type", "application/json");
+    conn.setDoOutput(true);
+
+    String jsonInputString = String.format("{\"gameID\":%d,\"playerColor\":\"%s\"}", gameId, color);
+    try (OutputStream os = conn.getOutputStream()) {
+      os.write(jsonInputString.getBytes());
+    }
+
+    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      throw new IOException("Join game failed with response code: " + conn.getResponseCode());
+    }
+
+    try (Scanner scanner = new Scanner(conn.getInputStream()).useDelimiter("\\A")) {
+      return scanner.hasNext() ? scanner.next() : "";
+    }
   }
 }
