@@ -6,6 +6,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import dataaccess.MySqlDataAccess;
 import model.*;
+import server.websocket.WebsocketHandler;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -21,6 +22,7 @@ public class Server {
     private final GameService gameService;
     private final ClearService clearService;
     private DataAccess dataaccess;
+
 
     public Server() {
         try {
@@ -41,8 +43,9 @@ public class Server {
         Spark.port(desiredPort);
 
         Spark.staticFiles.location("web");
+        WebsocketHandler webSocketHandler = new WebsocketHandler(dataaccess);
 
-        // Register your endpoints and handle exceptions here.
+        Spark.webSocket("/connect", webSocketHandler);
         Spark.delete("/db", this::clearApplication);
         Spark.post("/user", this::register);
         Spark.post("/session", this::login);
