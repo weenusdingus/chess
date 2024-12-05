@@ -1,12 +1,23 @@
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.net.HttpRetryException;
 import java.util.Scanner;
 import server.ServerFacade;
 import ui.ChessBoard;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.util.*;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
+import websocket.NotificationHandler;
+import websocket.WebSocketFacade;
 
 
 public class Main {
@@ -16,6 +27,10 @@ public class Main {
     private static String authToken = null;
     private static final Gson GSON = new Gson();
     private static final Map<String, Integer> NAME_TO_ID= new HashMap<>();
+    private static WebSocketFacade websocket;
+    private ChessBoard chessboard = new ChessBoard();
+    private ChessGame.TeamColor perspective;
+    private static ChessGame game;
 
     public static void main(String[] args) {
         System.out.println("♕ Welcome to 240 Chess! Type 'help' to get started ♕");
@@ -56,7 +71,6 @@ public class Main {
                 case "create" -> createGame();
                 case "list" -> listGames();
                 case "join" -> joinGame();
-                case "redraw" -> redrawChessBoard();
                 case "observe" -> observeGame();
                 case "quit" -> {
                     return;
@@ -65,6 +79,96 @@ public class Main {
             }
         }
         preLoginUI();
+    }
+
+    private static void gameplayLoop(int gameID, String playerColor) throws HttpRetryException {
+        System.out.println("Entering gameplay... Type 'help' for gameplay commands.");
+        boolean isPlaying = true;
+
+        while (isPlaying) {
+            System.out.print("[GAMEPLAY] >>> ");
+            String command = SCANNER.nextLine().trim().toLowerCase();
+
+            switch (command) {
+                case "help" -> displayGameplayHelp();
+                case "move" -> makeMove(gameID);
+                case "resign" -> resignGame(gameID);
+                case "board" -> displayChessBoard(playerColor);
+                case "highlight" -> highlightLegalMoves();
+                case "redraw" -> redrawChessBoard();
+                case "quit" -> {
+                    System.out.println("Leaving the game...");
+                    leaveGame(gameID);
+                    isPlaying = false;
+                }
+                default -> System.out.println("Unknown command. Type 'help' for gameplay commands.");
+            }
+        }
+    }
+
+    private static void highlightLegalMoves() {
+
+    }
+
+    private static void makeMove(int gameID) throws HttpRetryException {
+        System.out.print("Enter start position: ");
+        String start = SCANNER.next().toLowerCase();
+        SCANNER.nextLine();
+        System.out.print("Enter end position: ");
+        String end = SCANNER.next().toLowerCase();
+        SCANNER.nextLine();
+
+        int startRow = Character.getNumericValue(start.charAt(1));
+        int startCol = 1+(start.charAt(0)-'a');
+
+        int endRow = Character.getNumericValue(end.charAt(1));
+        int endCol = 1+(end.charAt(0)-'a');
+
+        ChessPosition startPosition = new ChessPosition(startRow, startCol);
+        ChessPosition endPosition = new ChessPosition(endRow, endCol);
+
+        ChessPiece.PieceType type = null;
+        if(startRow>=1 && startRow<=8 && startCol>=1 && startCol<=8
+                && game.getBoard().getPiece(startPosition).getPieceType() == ChessPiece.PieceType.PAWN
+                && (endRow == 1 || endRow == 8)) {
+            System.out.print("Enter promotion piece type: ");
+            String typeString = SCANNER.next().toLowerCase();
+            SCANNER.nextLine();
+            switch (typeString) {
+                case "queen" -> type = ChessPiece.PieceType.QUEEN;
+                case "rook" -> type = ChessPiece.PieceType.ROOK;
+                case "bishop" -> type = ChessPiece.PieceType.BISHOP;
+                case "knight" -> type = ChessPiece.PieceType.KNIGHT;
+            }
+        }
+
+        ChessMove move = new ChessMove(startPosition, endPosition, type);
+
+        websocket.makeMove(authToken, gameID, move);
+    }
+    private static void resignGame(int gameID) {
+        try {
+            websocket.resignGame(authToken, gameID);
+            System.out.println("You have resigned the game.");
+        } catch (HttpRetryException e) {
+            System.out.println("Failed to resign: " + e.getMessage());
+        }
+    }
+
+    private static void leaveGame(int gameID) {
+        try {
+            websocket.leaveGame(authToken, gameID);
+            System.out.println("You left the game.");
+        } catch (HttpRetryException e) {
+            System.out.println("Failed to leave game: " + e.getMessage());
+        }
+    }
+
+    private static void displayGameplayHelp() {
+        System.out.println("  move - make a move on the board");
+        System.out.println("  resign - resign from the game");
+        System.out.println("  board - view the current chessboard");
+        System.out.println("  quit - leave the game");
     }
 
     private static void displayPreLoginHelp() {
