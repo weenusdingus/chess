@@ -3,7 +3,10 @@ package server.websocket;
 import chess.ChessGame;
 import chess.ChessMove;
 import com.google.gson.Gson;
+<<<<<<< HEAD
 import dataaccess.DataAccess;
+=======
+>>>>>>> origin/main
 import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
 import model.AuthData;
@@ -13,16 +16,26 @@ import org.eclipse.jetty.websocket.api.annotations.*;
 import websocket.messages.*;
 import websocket.commands.*;
 
+<<<<<<< HEAD
 import javax.xml.crypto.Data;
+=======
+>>>>>>> origin/main
 import java.io.IOException;
 
 @WebSocket
 public class WebsocketHandler {
   private final ConnectionManager connectionManager = new ConnectionManager();
+<<<<<<< HEAD
   private final DataAccess dataAccess;
   private final Gson gson = new Gson();
 
   public WebsocketHandler(DataAccess dataAccess) {
+=======
+  private final MySqlDataAccess dataAccess;
+  private final Gson gson = new Gson();
+
+  public WebsocketHandler(MySqlDataAccess dataAccess) {
+>>>>>>> origin/main
     this.dataAccess = dataAccess;
   }
 
@@ -92,7 +105,11 @@ public class WebsocketHandler {
     }
 
     ChessGame game = gameData.game();
+<<<<<<< HEAD
     ChessMove move = gson.fromJson(command.getAuthToken(), ChessMove.class);
+=======
+    ChessMove move = gson.fromJson(command.getAuthToken(), ChessMove.class); // Simplified deserialization
+>>>>>>> origin/main
     try {
       game.makeMove(move);
       dataAccess.updateGame(command.getGameID(), gameData);
