@@ -11,6 +11,7 @@ import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.ServerMessage;
 
@@ -123,8 +124,8 @@ public class WebsocketHandler {
   }
 
   private String createErrorMessage(String error) {
-    ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-    return gson.toJson(errorMessage) + " " + error;
+    ErrorMessage errorMessage = new ErrorMessage(error);
+    return gson.toJson(errorMessage);
   }
 
   private String createNotificationMessage(String notification) {
