@@ -3,6 +3,7 @@ package server.websocket;
 import chess.ChessGame;
 import chess.ChessMove;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
@@ -10,6 +11,7 @@ import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import websocket.commands.UserGameCommand;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
@@ -71,15 +73,25 @@ public class WebsocketHandler {
 
   private void handleConnect(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
     connectionManager.add(username, session);
-    GameData game = dataAccess.getGame(command.getGameID());
 
-    if (game == null) {
+    GameData gameData = dataAccess.getGame(command.getGameID());
+    if (gameData == null) {
       session.getRemote().sendString(createErrorMessage("Game not found."));
       return;
     }
 
+    // Broadcast notification to other players/observers
     connectionManager.broadcast(username, createNotificationMessage(username + " joined the game."));
-    session.getRemote().sendString(createServerMessage(ServerMessage.ServerMessageType.LOAD_GAME, gson.toJson(game)));
+
+    // Send LOAD_GAME message with all game details
+    LoadGameMessage loadGameMessage = new LoadGameMessage(
+            gameData.gameID(),
+            gameData.whiteUsername(),
+            gameData.blackUsername(),
+            gameData.gameName(),
+            gameData.game()
+    );
+    session.getRemote().sendString(gson.toJson(loadGameMessage));
   }
 
   private void handleMakeMove(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
@@ -116,13 +128,17 @@ public class WebsocketHandler {
   }
 
   private String createNotificationMessage(String notification) {
-    ServerMessage notificationMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-    return gson.toJson(notificationMessage) + " " + notification;
+    JsonObject message = new JsonObject();
+    message.addProperty("serverMessageType", ServerMessage.ServerMessageType.NOTIFICATION.toString());
+    message.addProperty("message", notification);
+    return gson.toJson(message);
   }
 
   private String createServerMessage(ServerMessage.ServerMessageType type, String data) {
-    ServerMessage message = new ServerMessage(type);
-    return gson.toJson(message) + " " + data;
+    JsonObject message = new JsonObject();
+    message.addProperty("serverMessageType", type.toString());
+    message.add("data", gson.toJsonTree(data));
+    return gson.toJson(message);
   }
 }
 
