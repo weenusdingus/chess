@@ -2,6 +2,7 @@ package server.websocket;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
@@ -10,6 +11,7 @@ import model.AuthData;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -48,7 +50,7 @@ public class WebsocketHandler {
 
       switch (command.getCommandType()) {
         case CONNECT -> handleConnect(session, username, command);
-        case MAKE_MOVE -> handleMakeMove(session, username, command);
+        case MAKE_MOVE -> handleMakeMove(session, username, message);
         case LEAVE -> handleLeave(session, username, command);
         case RESIGN -> handleResign(session, username, command);
       }
@@ -95,7 +97,9 @@ public class WebsocketHandler {
     session.getRemote().sendString(gson.toJson(loadGameMessage));
   }
 
-  private void handleMakeMove(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
+  private void handleMakeMove(Session session, String username, String message) throws IOException, DataAccessException {
+    MakeMoveCommand command = gson.fromJson(message, MakeMoveCommand.class);
+    System.out.println("Received command: " + command);
     GameData gameData = dataAccess.getGame(command.getGameID());
     if (gameData == null) {
       session.getRemote().sendString(createErrorMessage("Game not found."));
@@ -103,16 +107,48 @@ public class WebsocketHandler {
     }
 
     ChessGame game = gameData.game();
-    ChessMove move = gson.fromJson(command.getAuthToken(), ChessMove.class);
+
     try {
+      // Deserialize the MakeMoveCommand
+      MakeMoveCommand makeMoveCommand = gson.fromJson(gson.toJson(command), MakeMoveCommand.class);
+      ChessMove move = makeMoveCommand.getMove();
+
+      // Log the received move
+      System.out.println("Received Move: " + move);  // Log move here
+
+      // Check if move is null
+      if (move == null) {
+        session.getRemote().sendString(createErrorMessage("Move cannot be null."));
+        return;
+      }
+
+      // Attempt to make the move
       game.makeMove(move);
       dataAccess.updateGame(command.getGameID(), gameData);
 
-      connectionManager.broadcast(username, createNotificationMessage(username + " made a move: " + move));
-    } catch (Exception e) {
+      // Notify other players with an updated game state
+      LoadGameMessage loadGameMessage = new LoadGameMessage(
+              gameData.gameID(),
+              gameData.whiteUsername(),
+              gameData.blackUsername(),
+              gameData.gameName(),
+              game
+      );
+
+      connectionManager.broadcast(username, gson.toJson(loadGameMessage));
+      connectionManager.send(username, gson.toJson(loadGameMessage));
+      connectionManager.broadcast(username, createNotificationMessage("Move made"));
+
+
+    } catch (InvalidMoveException e) {
       session.getRemote().sendString(createErrorMessage("Invalid move: " + e.getMessage()));
+    } catch (Exception e) {
+      session.getRemote().sendString(createErrorMessage("Error processing message: " + e.getMessage()));
     }
   }
+
+
+
 
   private void handleLeave(Session session, String username, UserGameCommand command) throws IOException {
     connectionManager.remove(username);

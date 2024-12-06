@@ -49,12 +49,23 @@ public class WebSocketFacade extends Endpoint {
 
   public void makeMove(String authToken, int gameID, ChessMove move) throws HttpRetryException {
     try {
-      var action = new MakeMoveCommand(authToken, gameID, move);
-      this.session.getBasicRemote().sendText(new Gson().toJson(action));
+      // Ensure move is not null before sending
+      if (move == null) {
+        throw new HttpRetryException("Move cannot be null.", 400);  // Throw if move is null
+      }
+
+      // Construct MakeMoveCommand with the move
+      MakeMoveCommand action = new MakeMoveCommand(authToken, gameID, move);
+      String message = new Gson().toJson(action);  // Serialize the entire command
+
+      // Send the message through WebSocket
+      this.session.getBasicRemote().sendText(message);
     } catch (IOException ex) {
-      throw new HttpRetryException(ex.getMessage(),500);
+      throw new HttpRetryException(ex.getMessage(), 500);
     }
   }
+
+
 
   public void leaveGame(String authToken, int gameID) throws HttpRetryException {
     try {

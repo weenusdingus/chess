@@ -12,6 +12,8 @@ import ui.ChessBoard;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.util.*;
+
+import websocket.commands.MakeMoveCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -118,17 +120,18 @@ public class Main {
         String end = SCANNER.next().toLowerCase();
         SCANNER.nextLine();
 
+        // Convert input to row and column
         int startRow = Character.getNumericValue(start.charAt(1));
-        int startCol = 1+(start.charAt(0)-'a');
-
+        int startCol = 1 + (start.charAt(0) - 'a');
         int endRow = Character.getNumericValue(end.charAt(1));
-        int endCol = 1+(end.charAt(0)-'a');
+        int endCol = 1 + (end.charAt(0) - 'a');
 
+        // Create ChessPosition for start and end
         ChessPosition startPosition = new ChessPosition(startRow, startCol);
         ChessPosition endPosition = new ChessPosition(endRow, endCol);
 
         ChessPiece.PieceType type = null;
-        if(startRow>=1 && startRow<=8 && startCol>=1 && startCol<=8
+        if (startRow >= 1 && startRow <= 8 && startCol >= 1 && startCol <= 8
                 && game.getBoard().getPiece(startPosition).getPieceType() == ChessPiece.PieceType.PAWN
                 && (endRow == 1 || endRow == 8)) {
             System.out.print("Enter promotion piece type: ");
@@ -142,10 +145,19 @@ public class Main {
             }
         }
 
+        // Create ChessMove object
         ChessMove move = new ChessMove(startPosition, endPosition, type);
+        System.out.println("Sending Move: " + move);  // Log the move
 
-        websocket.makeMove(authToken, gameID, move);
+
+        // Ensure move is valid before sending
+        if (move != null) {
+            websocket.makeMove(authToken, gameID, move);
+        } else {
+            System.out.println("Invalid move: move is null");
+        }
     }
+
     private static void resignGame(int gameID) {
         try {
             websocket.resignGame(authToken, gameID);
