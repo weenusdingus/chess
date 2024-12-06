@@ -75,7 +75,7 @@ public class WebsocketHandler {
   }
 
   private void handleConnect(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
-    connectionManager.add(username, session);
+    connectionManager.add(command.getGameID(), username, session);
 
     GameData gameData = dataAccess.getGame(command.getGameID());
     if (gameData == null) {
@@ -83,10 +83,8 @@ public class WebsocketHandler {
       return;
     }
 
-    // Broadcast notification to other players/observers
-    connectionManager.broadcast(username, createNotificationMessage(username + " joined the game."));
+    connectionManager.broadcast(command.getGameID(), username, createNotificationMessage(username + " joined the game."));
 
-    // Send LOAD_GAME message with all game details
     LoadGameMessage loadGameMessage = new LoadGameMessage(
             gameData.gameID(),
             gameData.whiteUsername(),
@@ -96,6 +94,7 @@ public class WebsocketHandler {
     );
     session.getRemote().sendString(gson.toJson(loadGameMessage));
   }
+
 
   private void handleMakeMove(Session session, String username, String message) throws IOException, DataAccessException {
     MakeMoveCommand command = gson.fromJson(message, MakeMoveCommand.class);
@@ -157,9 +156,9 @@ public class WebsocketHandler {
               game
       );
 
-      connectionManager.broadcast(username, gson.toJson(loadGameMessage));
+      connectionManager.broadcast(command.getGameID(), username, gson.toJson(loadGameMessage));
       connectionManager.send(username, gson.toJson(loadGameMessage));
-      connectionManager.broadcast(username, createNotificationMessage("Move made"));
+      connectionManager.broadcast(command.getGameID(), username, createNotificationMessage("Move made"));
 
 
     } catch (InvalidMoveException e) {
@@ -211,13 +210,13 @@ public class WebsocketHandler {
 
     // Notify other clients
     if (isParticipant) {
-      connectionManager.broadcast(username, createNotificationMessage(username + " has left the game."));
+      connectionManager.broadcast(command.getGameID(), username, createNotificationMessage(username + " has left the game."));
     } else {
-      connectionManager.broadcast(username, createNotificationMessage(username + " (observer) has left the game."));
+      connectionManager.broadcast(command.getGameID(), username, createNotificationMessage(username + " (observer) has left the game."));
     }
 
     // Remove the user from the connection manager
-    connectionManager.remove(username);
+    connectionManager.remove(command.getGameID(), username);
 
     // Notify the client that they have left the game
 
@@ -254,7 +253,7 @@ public class WebsocketHandler {
     // Broadcast resignation notification
     String resigningPlayer = isWhitePlayer ? "White" : "Black";
     String message = resigningPlayer + " (" + username + ") has resigned. The game is over.";
-    connectionManager.broadcast(null, createNotificationMessage(message));
+    connectionManager.broadcast(command.getGameID(), null, createNotificationMessage(message));
   }
 
 
