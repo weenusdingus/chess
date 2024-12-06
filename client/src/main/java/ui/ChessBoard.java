@@ -3,7 +3,6 @@ package ui;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
-import ui.EscapeSequences;
 
 public class ChessBoard {
   private final String[][] board;
@@ -75,24 +74,25 @@ public class ChessBoard {
     }
   }
 
-
+  // Display board from black perspective
   public void displayBlackPerspective() {
-    printBoard(true);
+    printBoard(true); // True will indicate Black's perspective
   }
 
+  // Display board from white perspective
   public void displayWhitePerspective() {
-    printBoard(false);
+    printBoard(false); // False will indicate White's perspective
   }
 
   private void printBoard(boolean blackPerspective) {
-    String[][] displayBoard = blackPerspective ? reversePieces(copyBoard()) : copyBoard();
+    String[][] displayBoard = blackPerspective ? reversePieces(copyBoard()) : copyBoard(); // Reverse rows for black's perspective
     String columnLabels = blackPerspective ? "  H   G   F   E   D   C   B   A" : "  A   B   C   D   E   F   G   H";
 
     System.out.print(columnLabels);
     System.out.println();
 
     for (int i = 0; i < displayBoard.length; i++) {
-      int rowLabel = blackPerspective ? i + 1 : 8 - i;
+      int rowLabel = blackPerspective ? 8 - i : i + 1; // Reverse row label for black
       System.out.print(rowLabel + " ");
 
       for (int j = 0; j < displayBoard[i].length; j++) {
@@ -119,6 +119,7 @@ public class ChessBoard {
     return copy;
   }
 
+  // Reverse the rows for black's perspective, keeping the columns intact
   private String[][] reversePieces(String[][] board) {
     String[][] reversed = new String[board.length][board[0].length];
     for (int i = 0; i < board.length; i++) {
@@ -130,6 +131,7 @@ public class ChessBoard {
     return reversed;
   }
 }
+
 
 
 

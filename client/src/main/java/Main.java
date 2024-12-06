@@ -31,7 +31,7 @@ public class Main {
     private static final Map<String, Integer> NAME_TO_ID= new HashMap<>();
     private static WebSocketFacade websocket;
     private ChessBoard chessboard = new ChessBoard();
-    private ChessGame.TeamColor perspective;
+    private static String playerColor;
     private static ChessGame game;
 
     public static void main(String[] args) {
@@ -119,7 +119,7 @@ public class Main {
                     System.out.println("Game updated!");
                     ChessGame updatedGame = GSON.fromJson(jsonMessage.get("game"), ChessGame.class);
                     game = updatedGame; // Update local game state
-                    displayChessBoard(null); // Refresh the board
+                    displayChessBoard(playerColor); // Refresh the board
                 }
                 case "NOTIFICATION" -> {
                     String notification = jsonMessage.get("message").getAsString();
@@ -386,6 +386,8 @@ public class Main {
             SERVER_FACADE.joinGame(authToken, gameId, color);
             System.out.printf("Joined game #%s as %s.\n", gameNumber, color);
 
+            playerColor = color;
+
             websocket = new WebSocketFacade("ws://localhost:8080", Main::handleWebSocketMessage);
             websocket.connectToGame(authToken, gameId);
             gameplayUI(gameId, color);
@@ -435,19 +437,19 @@ public class Main {
             ChessBoard uiBoard = new ChessBoard();
             uiBoard.updateBoard(game.getBoard()); // Update UI board with current game state
 
-            if (playerColor != null) {
-                if (playerColor.equals("BLACK")) {
-                    uiBoard.displayBlackPerspective();
-                } else {
-                    uiBoard.displayWhitePerspective();
-                }
+            if ("BLACK".equals(playerColor)) {
+                System.out.println("Rendering from Black's perspective...");
+                uiBoard.displayBlackPerspective(); // Black's pieces are at the bottom
             } else {
-                uiBoard.displayWhitePerspective(); // Default to white if observing
+                System.out.println("Rendering from White's perspective...");
+                uiBoard.displayWhitePerspective(); // White's pieces are at the bottom
             }
         } catch (Exception e) {
             System.out.println("Error updating board: " + e.getMessage());
         }
     }
+
+
 
 
     private static void redrawChessBoard() {
