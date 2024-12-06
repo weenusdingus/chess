@@ -122,6 +122,23 @@ public class WebsocketHandler {
         return;
       }
 
+      // Check if the user is authorized to make this move
+      boolean isWhitePlayer = username.equals(gameData.whiteUsername());
+      boolean isBlackPlayer = username.equals(gameData.blackUsername());
+
+      // Ensure the user is one of the players
+      if (!isWhitePlayer && !isBlackPlayer) {
+        session.getRemote().sendString(createErrorMessage("You are not a player in this game."));
+        return;
+      }
+
+      // Ensure it's the user's turn
+      if ((game.getTeamTurn() == ChessGame.TeamColor.WHITE && !isWhitePlayer) ||
+              (game.getTeamTurn() == ChessGame.TeamColor.BLACK && !isBlackPlayer)) {
+        session.getRemote().sendString(createErrorMessage("It's not your turn."));
+        return;
+      }
+
       // Attempt to make the move
       game.makeMove(move);
       dataAccess.updateGame(command.getGameID(), gameData);
