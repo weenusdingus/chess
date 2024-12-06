@@ -172,10 +172,58 @@ public class WebsocketHandler {
 
 
 
-  private void handleLeave(Session session, String username, UserGameCommand command) throws IOException {
+  private void handleLeave(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
+    GameData gameData = dataAccess.getGame(command.getGameID());
+    if (gameData == null) {
+      session.getRemote().sendString(createErrorMessage("Game not found."));
+      return;
+    }
+
+    boolean isParticipant = false;
+    GameData updatedGameData;
+
+    // Check if the user is a player and create a new GameData object with the updated state
+    if (username.equals(gameData.whiteUsername())) {
+      updatedGameData = new GameData(
+              gameData.gameID(),
+              null, // Remove white player
+              gameData.blackUsername(),
+              gameData.gameName(),
+              gameData.game()
+      );
+      isParticipant = true;
+    } else if (username.equals(gameData.blackUsername())) {
+      updatedGameData = new GameData(
+              gameData.gameID(),
+              gameData.whiteUsername(),
+              null, // Remove black player
+              gameData.gameName(),
+              gameData.game()
+      );
+      isParticipant = true;
+    } else {
+      // Observers don't require game state updates
+      updatedGameData = gameData;
+    }
+
+    // Update the game in the database
+    dataAccess.updateGame(command.getGameID(), updatedGameData);
+
+    // Notify other clients
+    if (isParticipant) {
+      connectionManager.broadcast(username, createNotificationMessage(username + " has left the game."));
+    } else {
+      connectionManager.broadcast(username, createNotificationMessage(username + " (observer) has left the game."));
+    }
+
+    // Remove the user from the connection manager
     connectionManager.remove(username);
-    connectionManager.broadcast(username, createNotificationMessage(username + " left the game."));
+
+    // Notify the client that they have left the game
+
   }
+
+
 
   private void handleResign(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
     GameData gameData = dataAccess.getGame(command.getGameID());
