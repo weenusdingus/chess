@@ -47,15 +47,5 @@ public class ConnectionManager {
       connection.send(message);
     }
   }
-
-  // Cancel a session for a user
-  public void cancelSession(Session session, String message) throws IOException {
-    for (var c : connections.values()) {
-      if (c.session.equals(session) && c.session.isOpen()) {
-        c.send(message);
-        return;
-      }
-    }
-  }
 }
 

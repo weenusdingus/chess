@@ -83,8 +83,9 @@ public class Main {
         preLoginUI();
     }
 
-    private static void gameplayLoop(int gameID, String playerColor) throws HttpRetryException {
+    private static void gameplayUI(int gameID, String playerColor) throws HttpRetryException {
         System.out.println("Entering gameplay... Type 'help' for gameplay commands.");
+        websocket = new WebSocketFacade("ws://localhost:8080", Main::handleWebSocketMessage);
         boolean isPlaying = true;
 
         while (isPlaying) {
@@ -107,6 +108,34 @@ public class Main {
             }
         }
     }
+
+    private static void handleWebSocketMessage(String message) {
+        try {
+            JsonObject jsonMessage = GSON.fromJson(message, JsonObject.class);
+            String messageType = jsonMessage.get("serverMessageType").getAsString();
+
+            switch (messageType) {
+                case "LOAD_GAME" -> {
+                    System.out.println("Game updated!");
+                    ChessGame updatedGame = GSON.fromJson(jsonMessage.get("game"), ChessGame.class);
+                    game = updatedGame; // Update local game state
+                    displayChessBoard(null); // Refresh the board
+                }
+                case "NOTIFICATION" -> {
+                    String notification = jsonMessage.get("message").getAsString();
+                    System.out.println("Notification: " + notification);
+                }
+                case "ERROR" -> {
+                    String error = jsonMessage.get("message").getAsString();
+                    System.err.println("Error: " + error);
+                }
+                default -> System.out.println("Unknown message type received: " + messageType);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to process WebSocket message: " + e.getMessage());
+        }
+    }
+
 
     private static void highlightLegalMoves() {
 
@@ -214,7 +243,7 @@ public class Main {
 
             String response = SERVER_FACADE.login(username, password);
             authToken = extractAuthToken(response);
-            System.out.println("Welcome " + username + "!");
+            System.out.println("Welcome back," + username + "!");
         } catch (IOException e) {
             System.out.println("Invalid username or password.");
         } catch (Exception e) {
@@ -239,7 +268,7 @@ public class Main {
 
             String response = SERVER_FACADE.register(username, password, email);
             authToken = extractAuthToken(response);
-            System.out.println("Welcome back, " + username + "!");
+            System.out.println("Welcome, " + username + "!");
         } catch (IOException e) {
             System.out.println("Try a different username");
         } catch (Exception e) {
@@ -356,7 +385,10 @@ public class Main {
 
             SERVER_FACADE.joinGame(authToken, gameId, color);
             System.out.printf("Joined game #%s as %s.\n", gameNumber, color);
-            displayChessBoard(color);
+
+            websocket = new WebSocketFacade("ws://localhost:8080", Main::handleWebSocketMessage);
+            websocket.connectToGame(authToken, gameId);
+            gameplayUI(gameId, color);
 
         } catch (IOException e) {
             System.out.println("Unable to join game.");
@@ -384,7 +416,12 @@ public class Main {
 
             SERVER_FACADE.joinGame(authToken, gameId, null);
             System.out.printf("Observing game #%s.\n", gameNumber);
-            displayChessBoard(null);
+
+            websocket = new WebSocketFacade("ws://localhost:8080", Main::handleWebSocketMessage);
+            websocket.connectToGame(authToken, gameId);
+
+            // Transition to gameplay UI with limited functionality for observation
+            gameplayUI(gameId, null);
 
         } catch (IOException e) {
             System.out.println("Unable to observe game.");
@@ -395,25 +432,23 @@ public class Main {
 
     private static void displayChessBoard(String playerColor) {
         try {
-            ChessBoard board = new ChessBoard();
+            ChessBoard uiBoard = new ChessBoard();
+            uiBoard.updateBoard(game.getBoard()); // Update UI board with current game state
 
             if (playerColor != null) {
                 if (playerColor.equals("BLACK")) {
-                    board.displayBlackPerspective();
+                    uiBoard.displayBlackPerspective();
                 } else {
-                    board.displayWhitePerspective();
+                    uiBoard.displayWhitePerspective();
                 }
-
+            } else {
+                uiBoard.displayWhitePerspective(); // Default to white if observing
             }
-            //default white for now if observing
-            else {
-                board.displayWhitePerspective();
-            }
-
         } catch (Exception e) {
-            System.out.println("Error");
+            System.out.println("Error updating board: " + e.getMessage());
         }
     }
+
 
     private static void redrawChessBoard() {
         try {

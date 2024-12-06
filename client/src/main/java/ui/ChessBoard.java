@@ -1,36 +1,80 @@
 package ui;
 
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import ui.EscapeSequences;
+
 public class ChessBoard {
   private final String[][] board;
 
   public ChessBoard() {
-    board = new String[][]{
-            {EscapeSequences.BLACK_ROOK, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_BISHOP,
-                    EscapeSequences.BLACK_QUEEN, EscapeSequences.BLACK_KING, EscapeSequences.BLACK_BISHOP,
-                    EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_ROOK},
-            {EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
-                    EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
-                    EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN},
-            {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-            {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-            {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-            {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                    EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-            {EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
-                    EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
-                    EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN},
-            {EscapeSequences.WHITE_ROOK, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_BISHOP,
-                    EscapeSequences.WHITE_QUEEN, EscapeSequences.WHITE_KING, EscapeSequences.WHITE_BISHOP,
-                    EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_ROOK}
-    };
+    board = new String[8][8]; // Empty board for initialization
+    resetBoard();
   }
+
+  // Reset board to the default setup
+  public void resetBoard() {
+    board[0] = new String[]{EscapeSequences.BLACK_ROOK, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_BISHOP,
+            EscapeSequences.BLACK_QUEEN, EscapeSequences.BLACK_KING, EscapeSequences.BLACK_BISHOP,
+            EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_ROOK};
+    board[1] = new String[]{EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
+            EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
+            EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN};
+    for (int i = 2; i < 6; i++) {
+      for (int j = 0; j < 8; j++) {
+        board[i][j] = EscapeSequences.EMPTY;
+      }
+    }
+    board[6] = new String[]{EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
+            EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
+            EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN};
+    board[7] = new String[]{EscapeSequences.WHITE_ROOK, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_BISHOP,
+            EscapeSequences.WHITE_QUEEN, EscapeSequences.WHITE_KING, EscapeSequences.WHITE_BISHOP,
+            EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_ROOK};
+  }
+
+  // Update the board based on the current chess.ChessBoard state
+  public void updateBoard(chess.ChessBoard chessBoard) {
+    for (int row = 1; row <= 8; row++) {
+      for (int col = 1; col <= 8; col++) {
+        ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+        if (piece == null) {
+          board[8 - row][col - 1] = EscapeSequences.EMPTY;
+        } else {
+          // Map ChessPiece to its corresponding escape sequence
+          board[8 - row][col - 1] = getPieceSymbol(piece);
+        }
+      }
+    }
+  }
+
+  // Helper method to map ChessPiece to escape sequences
+  private String getPieceSymbol(ChessPiece piece) {
+    switch (piece.getPieceType()) {
+      case KING:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_KING : EscapeSequences.WHITE_KING;
+      case QUEEN:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_QUEEN : EscapeSequences.WHITE_QUEEN;
+      case BISHOP:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_BISHOP : EscapeSequences.WHITE_BISHOP;
+      case KNIGHT:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_KNIGHT : EscapeSequences.WHITE_KNIGHT;
+      case ROOK:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_ROOK : EscapeSequences.WHITE_ROOK;
+      case PAWN:
+        return piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                ? EscapeSequences.BLACK_PAWN : EscapeSequences.WHITE_PAWN;
+      default:
+        return EscapeSequences.EMPTY;
+    }
+  }
+
 
   public void displayBlackPerspective() {
     printBoard(true);
@@ -86,5 +130,6 @@ public class ChessBoard {
     return reversed;
   }
 }
+
 
 

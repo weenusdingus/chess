@@ -269,12 +269,9 @@ public class WebsocketHandler {
     return gson.toJson(message);
   }
 
-  private String createServerMessage(ServerMessage.ServerMessageType type, String data) {
-    JsonObject message = new JsonObject();
-    message.addProperty("serverMessageType", type.toString());
-    message.add("data", gson.toJsonTree(data));
-    return gson.toJson(message);
-  }
+
+
+
 }
 
 
