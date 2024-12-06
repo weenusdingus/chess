@@ -26,10 +26,12 @@ public class ChessGame {
 
     private ChessBoard board = new ChessBoard();
     private TeamColor currentTurn;
+    private boolean gameOver;
 
     public ChessGame() {
         board.resetBoard();
         currentTurn = TeamColor.WHITE;
+        gameOver = false;
     }
 
     /**
@@ -46,6 +48,12 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         currentTurn = team;
+    }
+    public boolean isGameOver() {
+        return gameOver;
+    }
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     /**

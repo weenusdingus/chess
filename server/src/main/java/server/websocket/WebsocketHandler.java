@@ -108,6 +108,11 @@ public class WebsocketHandler {
 
     ChessGame game = gameData.game();
 
+    if (game.isGameOver()) {  // Assuming gameData has a `isGameOver` method or similar flag
+      session.getRemote().sendString(createErrorMessage("The game is over. No more moves can be made."));
+      return;
+    }
+
     try {
       // Deserialize the MakeMoveCommand
       MakeMoveCommand makeMoveCommand = gson.fromJson(gson.toJson(command), MakeMoveCommand.class);
@@ -172,9 +177,38 @@ public class WebsocketHandler {
     connectionManager.broadcast(username, createNotificationMessage(username + " left the game."));
   }
 
-  private void handleResign(Session session, String username, UserGameCommand command) throws IOException {
-    connectionManager.broadcast(username, createNotificationMessage(username + " resigned."));
+  private void handleResign(Session session, String username, UserGameCommand command) throws IOException, DataAccessException {
+    GameData gameData = dataAccess.getGame(command.getGameID());
+    if (gameData == null) {
+      session.getRemote().sendString(createErrorMessage("Game not found."));
+      return;
+    }
+
+    ChessGame game = gameData.game();
+    if (game.isGameOver()) {
+      session.getRemote().sendString(createErrorMessage("The game is already over. You cannot resign again."));
+      return;
+    }
+
+    // Check if the user is a player in the game
+    boolean isWhitePlayer = username.equals(gameData.whiteUsername());
+    boolean isBlackPlayer = username.equals(gameData.blackUsername());
+
+    if (!isWhitePlayer && !isBlackPlayer) {
+      session.getRemote().sendString(createErrorMessage("You cannot resign because you are not a player in this game."));
+      return;
+    }
+
+    // Mark the game as over
+    game.setGameOver(true);
+    dataAccess.updateGame(command.getGameID(), gameData);
+
+    // Broadcast resignation notification
+    String resigningPlayer = isWhitePlayer ? "White" : "Black";
+    String message = resigningPlayer + " (" + username + ") has resigned. The game is over.";
+    connectionManager.broadcast(null, createNotificationMessage(message));
   }
+
 
   private String createErrorMessage(String error) {
     ErrorMessage errorMessage = new ErrorMessage(error);
